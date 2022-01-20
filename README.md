@@ -9,6 +9,10 @@
 
 <!-- use_this::use_lifecycle_badge(stage) -->
 
+[![CRAN
+status](https://www.r-pkg.org/badges/version/optedr)](https://CRAN.R-project.org/package=optedr)
+[![Lifecycle:
+stable](https://img.shields.io/badge/lifecycle-stable-brightgreen.svg)](https://lifecycle.r-lib.org/articles/stages.html#stable)
 <!-- badges: end -->
 
 ## Overview
@@ -24,13 +28,12 @@ rounding approximate design. Among its capabilities are:
 
 ## Installation
 
-<!-- You can install the released version of optedr from [CRAN](https://CRAN.R-project.org) with: -->
+You can install the released version of optedr from
+[CRAN](https://CRAN.R-project.org) with:
 
-<!-- ``` r -->
-
-<!-- install.packages("optedr") -->
-
-<!-- ``` -->
+``` r
+install.packages("optedr")
+```
 
 You can install the latest version of the package from
 [GitHub](https://github.com/) with:
