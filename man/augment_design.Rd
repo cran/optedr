@@ -5,6 +5,7 @@
 \title{Augment Design}
 \usage{
 augment_design(
+  criterion,
   init_design,
   alpha,
   model,
@@ -12,39 +13,64 @@ augment_design(
   par_values,
   design_space,
   calc_optimal_design,
+  par_int = NA,
+  matB = NA,
+  distribution = NA,
   weight_fun = function(x) 1
 )
 }
 \arguments{
-\item{init_design}{A dataframe with "Point" and "Weight" columns that represents the initial design to augment}
+\item{criterion}{character variable with the chosen optimality criterion. Can be one of the following:
+\itemize{
+\item 'D-Optimality'
+\item 'Ds-Optimality'
+\item 'A-Optimality'
+\item 'I-Optimality'
+}}
 
-\item{alpha}{Combined weight of the new points}
+\item{init_design}{dataframe with "Point" and "Weight" columns that represents the initial design to augment}
 
-\item{model}{Formula that represent the model with x as the unknown}
+\item{alpha}{combined weight of the new points}
 
-\item{parameters}{Character vector with the unknown parameters of the model to estimate}
+\item{model}{formula that represents the model with x as the independent variable}
 
-\item{par_values}{Numeric vector with the initial values of the unknown parameters}
+\item{parameters}{character vector with the unknown parameters of the model to estimate}
 
-\item{design_space}{Numeric vector with the extremes of the space of the design}
+\item{par_values}{numeric vector with the initial values of the unknown parameters}
 
-\item{calc_optimal_design}{Boolean parameter, if TRUE, the optimal design is calculated and efficiencies of the initial and augmented design are given}
+\item{design_space}{numeric vector with the limits of the space of the design}
 
-\item{weight_fun}{Optional one variable function that represents the square of the structure of variance, in case of heteroscedastic variance of the response}
+\item{calc_optimal_design}{boolean parameter, if TRUE, the optimal design is calculated and efficiencies of the initial and augmented design are given}
+
+\item{par_int}{optional numeric vector with the index of the \code{parameters} of interest for Ds-optimality.}
+
+\item{matB}{optional matrix of dimensions k x k, integral of the information matrix of the model over the
+interest region for I-optimality.}
+
+\item{distribution}{character specifying the probability distribution of the response. Can be one of the following:
+\itemize{
+\item 'Homoscedasticity'
+\item 'Gamma', which can be used for exponential or normal heteroscedastic with constant relative error
+\item 'Poisson'
+\item 'Logistic'
+\item 'Log-Normal' (work in progress)
+}}
+
+\item{weight_fun}{optional one variable function that represents the square of the structure of variance, in case of heteroscedastic variance of the response}
 }
 \value{
 A dataframe that represents the D-augmented design
 }
 \description{
-D-Augments a design. The user gives an initial design for which he would like to add points
+Augments a design. The user gives an initial design for which he would like to add points
 and specifies the weight of the new points. Then he is prompted to choose a
 minimum efficiency. After that, the candidate points region is calculated
 and the user can choose the points and weights to add.
 }
 \examples{
 init_des <- data.frame("Point" = c(30, 60, 90), "Weight" = c(1/3, 1/3, 1/3))
-augment_design(init_des, 0.25, y ~ 10^(a-b/(c+x)), c("a","b","c"),
+augment_design("D-Optimality", init_des, 0.25, y ~ 10^(a-b/(c+x)), c("a","b","c"),
   c(8.07131,  1730.63, 233.426), c(1, 100), TRUE)
-augment_design(init_des, 0.25, y ~ 10^(a-b/(c+x)), c("a","b","c"),
+augment_design("D-Optimality", init_des, 0.25, y ~ 10^(a-b/(c+x)), c("a","b","c"),
   c(8.07131,  1730.63, 233.426), c(1, 100), FALSE)
 }
