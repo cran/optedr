@@ -7,7 +7,7 @@
 WFMult(
   init_design,
   grad,
-  Criterion,
+  criterion,
   par_int = NA,
   matB = NA,
   min,
@@ -30,19 +30,19 @@ WFMult(
 
 \item{grad}{function of partial derivatives of the model.}
 
-\item{Criterion}{character variable with the chosen optimality criterion. Can be one of the following:
+\item{criterion}{character variable with the chosen optimality criterion. Can be one of the following:
 \itemize{
 \item 'D-Optimality'
 \item 'Ds-Optimality'
 \item 'A-Optimality'
 \item 'I-Optimality'
+\item 'L-Optimality'
 }}
 
 \item{par_int}{numeric vector with the index of the \code{parameters} of interest. Only necessary when
-the \code{Criterion} chosen is 'Ds-Optimality'.}
+the \code{criterion} chosen is 'Ds-Optimality'.}
 
-\item{matB}{optional matrix of dimensions k x k, integral of the information matrix of the model over the
-interest region for I-optimality.}
+\item{matB}{optional matrix of dimensions k x k, for L-optimality.}
 
 \item{min}{numeric value with the inferior bound of the space of the design.}
 
@@ -74,7 +74,7 @@ A list of two objects:
 }
 }
 \description{
-Depending on the \code{Criterion} the cocktail algorithm for the chosen criterion is called,
+Depending on the \code{criterion} the cocktail algorithm for the chosen criterion is called,
 and the necessary parameters for the functions are given from the user input.
 }
 \seealso{

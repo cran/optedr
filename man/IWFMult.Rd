@@ -2,7 +2,7 @@
 % Please edit documentation in R/wf_mult.R
 \name{IWFMult}
 \alias{IWFMult}
-\title{Cocktail Algorithm implementation for I-Optimality and A-Optimality (with matB = diag(k))}
+\title{Cocktail Algorithm implementation for L-, I- and A-Optimality (with matB = diag(k))}
 \usage{
 IWFMult(
   init_design,
@@ -15,7 +15,8 @@ IWFMult(
   delete_thresh,
   delta_weights,
   tol,
-  tol2
+  tol2,
+  criterion
 )
 }
 \arguments{
@@ -27,8 +28,7 @@ IWFMult(
 
 \item{grad}{function of partial derivatives of the model.}
 
-\item{matB}{optional matrix of dimensions k x k, integral of the information matrix of the model over the
-interest region for I-optimality.}
+\item{matB}{optional matrix of dimensions k x k, for L-optimality.}
 
 \item{min}{numeric value with the inferior bound of the space of the design.}
 
@@ -48,6 +48,15 @@ in order to not be deleted from the design.}
 \item{tol}{numeric value for the convergence of the weight optimizing algorithm.}
 
 \item{tol2}{numeric value for the stop condition of the algorithm.}
+
+\item{criterion}{character variable with the chosen optimality criterion. Can be one of the following:
+\itemize{
+\item 'D-Optimality'
+\item 'Ds-Optimality'
+\item 'A-Optimality'
+\item 'I-Optimality'
+\item 'L-Optimality'
+}}
 }
 \value{
 list correspondent to the output of the correspondent algorithm called, dependent on the criterion.

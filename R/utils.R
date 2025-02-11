@@ -8,23 +8,22 @@
 #' @param char_vars character vector with the parameters of the models, as written in the \code{formula}
 #' @param values numeric vector with the parameters nominal values, in the same order as given in \code{parameters}.
 #' @param distribution character variable specifying the probability distribution of the response. Can be one of the following:
-#'   * 'Homoscedasticity'
+#'   * 'Normal', for normal homoscedastic (default)
 #'   * 'Gamma', which can be used for exponential or normal heteroscedastic with constant relative error
 #'   * 'Poisson'
 #'   * 'Logistic'
-#'   * 'Log-Normal' (work in progress)
 #'
 #' @return one variable function that represents the square of the structure of variance, in case of heteroscedastic variance of the response.
 #'
-weight_function <- function(model, char_vars, values, distribution = "Homoscedasticity") {
+weight_function <- function(model, char_vars, values, distribution = "Normal") {
   # vars <- as.list(match.call())[-(1:2)]
   # char_vars <- sapply(vars, as.character)
   if(!(distribution %in% c("Poisson", "Gamma", "Logistic", #"log-normal",
-                           "Homoscedasticity"))){
+                           "Normal"))){
     warning(crayon::yellow(cli::symbol$warning), " Not a valid distribution specified, using a normal homoscedastic")
     return(function(x) 1)
   }
-  else if(distribution == "Homoscedasticity"){
+  else if(distribution == "Normal"){
     return(function(x) 1)
   }
   else if(distribution == "Poisson"){
@@ -419,7 +418,7 @@ plot_sens <- function(min, max, sens_function, criterion_value) {
     ggplot2::geom_line(mapping = ggplot2::aes(x = x, y = y), color = "steelblue3") +
     ggplot2::stat_function(fun = function(x) criterion_value, col = "goldenrod3") +
     ggplot2::xlim(min, max) +
-    ggplot2::labs(x = "X", y = "Y")
+    ggplot2::labs(x = "Design Space", y = "Sensitivity Function")
 }
 
 #' Plot Convergence of the algorithm
@@ -437,6 +436,7 @@ plot_convergence <- function(convergence) {
   step <- criteria <- NULL
   ggplot2::ggplot(data = convergence, ggplot2::aes(x = step, y = criteria)) +
     ggplot2::geom_line(color = "coral1") +
+    ggplot2::labs(y = "criterion") +
     ggplot2::theme_bw()
 }
 
@@ -479,7 +479,7 @@ integrate_reg_int <- function(grad, k, reg_int) {
 #' @export
 #'
 #' @examples
-#' rri <- opt_des(Criterion = "I-Optimality", model = y ~ a * exp(-b / x),
+#' rri <- opt_des(criterion = "I-Optimality", model = y ~ a * exp(-b / x),
 #'   parameters = c("a", "b"), par_values = c(1, 1500), design_space = c(212, 422),
 #'   reg_int = c(380, 422))
 #' summary(rri)
@@ -503,7 +503,7 @@ summary.optdes <- function(object, ...) {
 #' @export
 #'
 #' @examples
-#' rri <- opt_des(Criterion = "I-Optimality", model = y ~ a * exp(-b / x),
+#' rri <- opt_des(criterion = "I-Optimality", model = y ~ a * exp(-b / x),
 #'   parameters = c("a", "b"), par_values = c(1, 1500), design_space = c(212, 422),
 #'   reg_int = c(380, 422))
 #' print(rri)
@@ -521,7 +521,7 @@ print.optdes <- function(x, ...) {
 #' @export
 #'
 #' @examples
-#' rri <- opt_des(Criterion = "I-Optimality", model = y ~ a * exp(-b / x),
+#' rri <- opt_des(criterion = "I-Optimality", model = y ~ a * exp(-b / x),
 #'   parameters = c("a", "b"), par_values = c(1, 1500), design_space = c(212, 422),
 #'   reg_int = c(380, 422))
 #' plot(rri)
