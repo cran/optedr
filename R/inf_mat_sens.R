@@ -15,19 +15,20 @@
 #'
 #' @return A function depending on \code{x} that's the gradient of the \code{model} with respect to \code{char_vars}
 gradient <- function(model, char_vars, values, weight_fun = function(x) 1) {
-  # vars <- as.list(match.call())[-(1:2)]
-  # char_vars <- sapply(vars, as.character)
-  ext_char_vars <- c(char_vars, "x")
+  design_vars   <- detect_design_vars(model, char_vars)
+  ext_char_vars <- c(char_vars, design_vars)
   arglist <- lapply(ext_char_vars, function(x) NULL)
-  f <- as.function(append(stats::setNames(arglist, ext_char_vars), quote({})))
+  f  <- as.function(append(stats::setNames(arglist, ext_char_vars), quote({})))
   f1 <- stats::deriv(model, char_vars, f)
+  # x_val: scalar for single-factor, or named numeric vector for multi-factor.
+  # c(values, x_val) passes parameters positionally and design variables by name
+  # via do.call — works for both cases without branching.
   f2 <- function(x_val) {
     attr(do.call(f1, as.list(c(values, x_val))), "gradient")
   }
-  f3 <- function(x){
-    return(f2(x)*weight_fun(x))
-  }
-  return(f3)
+  f3 <- function(x) f2(x) * weight_fun(x)
+  attr(f3, "design_vars") <- design_vars
+  f3
 }
 
 
@@ -46,12 +47,27 @@ gradient <- function(model, char_vars, values, weight_fun = function(x) 1) {
 #'
 #' @return The information matrix of the design, a \eqn{k\times k} matrix where k is the length of the gradient.
 inf_mat <- function(grad, design) {
-  matrix_ret <- 0 * diag(length(grad(design$Point[[1]])))
-  for (i in seq_along(design$Weight)) {
-    f_col <- as.matrix(grad(design$Point[[i]]), nrow = 1, byrow = TRUE, dimnames = NULL)
-    matrix_ret <- matrix_ret + (t(f_col) %*% f_col) * design$Weight[[i]]
+  dvars <- attr(grad, "design_vars")
+  if (is.null(dvars)) dvars <- "x"          # backward compat if attr absent
+  design <- normalize_design_cols(design, dvars)
+
+  if (!is_multifactor(dvars)) {
+    # ── Single-factor path (current implementation) ──────────────────────────
+    k     <- length(grad(design[[dvars]][[1L]]))
+    F_mat <- vapply(design[[dvars]], function(x) as.vector(grad(x)), numeric(k))
+  } else {
+    # ── Multi-factor path ─────────────────────────────────────────────────────
+    # Evaluate gradient at each design point (a named row vector)
+    x0    <- unlist(design[1L, dvars])
+    k     <- length(grad(x0))
+    F_mat <- vapply(seq_len(nrow(design)), function(i) {
+      as.vector(grad(unlist(design[i, dvars])))
+    }, numeric(k))
   }
-  return(matrix_ret)
+
+  if (!is.matrix(F_mat)) F_mat <- matrix(F_mat, nrow = 1L)
+  # M = F diag(w) F^T = crossprod(sqrt(w) * F^T)  [LAPACK DSYRK]
+  crossprod(sqrt(design$Weight) * t(F_mat))
 }
 
 # Sensibility Function ------------------------------------
@@ -99,7 +115,7 @@ sens <- function(Criterion, grad, M, par_int = c(1), matB = NA) {
 #' @inherit sens params return
 #'
 dsens <- function(grad, M) {
-  invMat <- solve(M)
+  invMat <- inv_spd(M)
   sens_ret <- function(xval) {
     f_col <- as.matrix(grad(xval), nrow = 1, ncol = 3, byrow = TRUE, dimnames = NULL)
     return(f_col %*% invMat %*% t(f_col))
@@ -116,11 +132,11 @@ dsens <- function(grad, M) {
 #' @inherit sens params return
 #'
 dssens <- function(grad, M, par_int) {
-  invMat <- solve(M)
+  invMat <- inv_spd(M)
   if (length(M[-par_int, -par_int]) == 1) {
     invMat22 <- 1 / M[-par_int, -par_int]
   } else {
-    invMat22 <- solve(M[-par_int, -par_int])
+    invMat22 <- inv_spd(M[-par_int, -par_int])
   }
   sens_ret <- function(xval) {
     f_col <- as.matrix(grad(xval), nrow = 1, byrow = TRUE, dimnames = NULL)
@@ -139,9 +155,45 @@ dssens <- function(grad, M, par_int) {
 #' @inherit sens params return
 #'
 isens <- function(grad, M, matB) {
-  invMat <- solve(M)
+  invMat <- inv_spd(M)
   sens_ret <- function(xval) {
     f_col <- as.matrix(grad(xval), nrow = 1, ncol = 3, byrow = TRUE, dimnames = NULL)
     return(f_col %*% invMat %*% matB %*% invMat %*% t(f_col))
   }
+}
+
+
+# Compound sensitivity function: weighted sum of individual sensitivity functions.
+# compound_specs: list of per-criterion specs (see opt_des compound parameter).
+# Returns a closure that evaluates d_c(xval) = sum_i w_i * d_i(xval).
+csens <- function(compound_specs, grad, M) {
+  sens_fns <- lapply(compound_specs, function(spec) {
+    if (identical(spec$criterion, "D-Optimality"))
+      dsens(grad, M)
+    else if (identical(spec$criterion, "Ds-Optimality"))
+      dssens(grad, M, spec$par_int)
+    else
+      isens(grad, M, spec$matB)   # A, I, L
+  })
+  weights <- sapply(compound_specs, `[[`, "weight")
+  function(xval) {
+    sum(mapply(function(s, w) w * as.numeric(s(xval)), sens_fns, weights))
+  }
+}
+
+
+# Equivalence Theorem threshold for the compound criterion:
+# sum_i w_i * threshold_i, where threshold_i = k (D), s (Ds), tr(B M^{-1}) (A/I/L).
+compound_threshold <- function(compound_specs, M) {
+  total <- 0
+  for (spec in compound_specs) {
+    thr <- if (identical(spec$criterion, "D-Optimality"))
+             spec$k
+           else if (identical(spec$criterion, "Ds-Optimality"))
+             length(spec$par_int)
+           else
+             icrit(M, spec$matB)
+    total <- total + spec$weight * thr
+  }
+  total
 }

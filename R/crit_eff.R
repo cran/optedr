@@ -87,7 +87,24 @@ dscrit <- function(M, par_int) {
 #'
 #' @return Numeric value of the I-optimality criterion for the information matrix.
 icrit <- function(M, matB) {
-  return(tr(matB %*% solve(M)))
+  return(tr(matB %*% inv_spd(M)))
+}
+
+
+# Compound criterion value: weighted sum of individual criterion values.
+# compound_specs: preprocessed list (each element has criterion, weight, k/par_int/matB).
+ccrit <- function(compound_specs, M) {
+  total <- 0
+  for (spec in compound_specs) {
+    phi <- if (identical(spec$criterion, "D-Optimality"))
+             dcrit(M, spec$k)
+           else if (identical(spec$criterion, "Ds-Optimality"))
+             dscrit(M, spec$par_int)
+           else
+             icrit(M, spec$matB)
+    total <- total + spec$weight * phi
+  }
+  total
 }
 
 
@@ -125,10 +142,10 @@ eff <- function(criterion, mat1, mat2, k = 0, intPars = c(1), matB = NA) {
   }
   else if (identical(criterion, "A-Optimality")) {
     if (k == 0) k <- nrow(mat1)
-    return(tr(diag(k) %*% solve(mat2)) / tr(diag(k) %*% solve(mat1)))
+    return(tr(diag(k) %*% inv_spd(mat2)) / tr(diag(k) %*% inv_spd(mat1)))
   }
   else if (identical(criterion, "I-Optimality") || identical(criterion, "L-Optimality")) {
-    return(tr(matB %*% solve(mat2)) / tr(matB %*% solve(mat1)))
+    return(tr(matB %*% inv_spd(mat2)) / tr(matB %*% inv_spd(mat1)))
   }
 }
 
@@ -154,21 +171,55 @@ eff <- function(criterion, mat1, mat2, k = 0, intPars = c(1), matB = NA) {
 #' design <- data.frame("Point" = c(220, 240, 400), "Weight" = c(1 / 3, 1 / 3, 1 / 3))
 #' design_efficiency(design, result)
 design_efficiency <- function(design, opt_des_obj) {
-  # check_efficiency_input(opt_des_obj, design) COMPROBAR QUE EL NUMERO DE POUNTOS ES >= LENGTH GRAD/NROW MAT
-  if("optdes" %in% class(design)){
-    mat1 <- inf_mat(attr(opt_des_obj, "gradient"), design$optdes)
-  } else if("data.frame" %in% class(design)){
-    mat1 <- inf_mat(attr(opt_des_obj, "gradient"), design)
+  if (!"optdes" %in% class(opt_des_obj)) {
+    stop(crayon::red(cli::symbol$cross),
+         " The second argument must be an optdes object returned by opt_des()",
+         call. = FALSE)
+  }
+
+  # KL-Optimality: no information matrix; efficiency = KL(new) / KL(opt)
+  if (identical(opt_des_obj$criterion, "KL-Optimality")) {
+    kl_params <- attr(opt_des_obj, "hidden_value")
+    if ("optdes" %in% class(design)) {
+      des_df <- design$optdes
+    } else if ("data.frame" %in% class(design)) {
+      des_df <- design
+    } else {
+      stop(crayon::red(cli::symbol$cross),
+           " The first argument must be a data.frame or an optdes object returned by opt_des()",
+           call. = FALSE)
+    }
+    inner_new <- .kl_minopt(des_df, kl_params$kl_fun,
+                             kl_params$beta2_star, kl_params$lower, kl_params$upper)
+    eff <- inner_new$kl_val / opt_des_obj$crit_value
+    message(crayon::blue(cli::symbol$info), " The efficiency of the design is ", eff * 100, "%")
+    return(eff)
+  }
+
+  grad       <- attr(opt_des_obj, "gradient")
+  dvars      <- attr(grad, "design_vars")
+  if (is.null(dvars)) dvars <- "x"
+
+  if ("optdes" %in% class(design)) {
+    mat1 <- inf_mat(grad, design$optdes)
+  } else if ("data.frame" %in% class(design)) {
+    # Accept both "Point" (1D backward compat) and x1/x2/... column names
+    design <- normalize_design_cols(design, dvars)
+    missing_vars <- setdiff(dvars, names(design))
+    if (length(missing_vars) > 0L || !"Weight" %in% names(design)) {
+      expected <- if (length(dvars) == 1L && dvars == "x") "'Point' and 'Weight'" else
+        paste0("'", paste(c(dvars, "Weight"), collapse = "', '"), "'")
+      stop(crayon::red(cli::symbol$cross),
+           " The design data.frame must have columns ", expected,
+           call. = FALSE)
+    }
+    mat1 <- inf_mat(grad, design)
   } else {
-    error_msg <- paste0(error_msg, "\n", crayon::red(cli::symbol$cross), " The arguments must be two optdes objects or a data.frame and an optdes object")
-    stop(error_msg, call. = FALSE)
+    stop(crayon::red(cli::symbol$cross),
+         " The first argument must be a data.frame or an optdes object returned by opt_des()",
+         call. = FALSE)
   }
-  if("optdes" %in% class(opt_des_obj)){
-    mat2 <- inf_mat(attr(opt_des_obj, "gradient"), opt_des_obj$optdes)
-  } else{
-    error_msg <- paste0(error_msg, "\n", crayon::red(cli::symbol$cross), " The arguments must be two optdes objects or a data.frame and an optdes object")
-    stop(error_msg, call. = FALSE)
-  }
+  mat2 <- inf_mat(grad, opt_des_obj$optdes)
   if (identical(opt_des_obj$criterion, "D-Optimality")) {
     eff <- (det(mat1) / det(mat2))^(1 / attr(opt_des_obj, "hidden_value"))
     message(crayon::blue(cli::symbol$info), " The efficiency of the design is ", eff * 100, "%")
@@ -188,7 +239,13 @@ design_efficiency <- function(design, opt_des_obj) {
     }
   }
   else if (identical(opt_des_obj$criterion, "A-Optimality")  || identical(opt_des_obj$criterion, "I-Optimality")  || identical(opt_des_obj$criterion, "L-Optimality")) {
-    eff <- tr(attr(opt_des_obj, "hidden_value") %*% solve(mat2)) / tr(attr(opt_des_obj, "hidden_value") %*% solve(mat1))
+    eff <- tr(attr(opt_des_obj, "hidden_value") %*% inv_spd(mat2)) / tr(attr(opt_des_obj, "hidden_value") %*% inv_spd(mat1))
+    message(crayon::blue(cli::symbol$info), " The efficiency of the design is ", eff * 100, "%")
+    return(eff)
+  }
+  else if (identical(opt_des_obj$criterion, "Compound")) {
+    specs <- attr(opt_des_obj, "hidden_value")   # compound_specs
+    eff   <- ccrit(specs, mat2) / ccrit(specs, mat1)
     message(crayon::blue(cli::symbol$info), " The efficiency of the design is ", eff * 100, "%")
     return(eff)
   }

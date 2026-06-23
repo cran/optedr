@@ -17,12 +17,13 @@ check_inputs <- function(criterion, model, parameters, par_values, design_space,
                          par_int,
                          matB,
                          reg_int,
-                         desired_output,
                          weight_fun) {
   error_msg <- ""
   # Check for valid criterion
-  if (!criterion %in% c("D-Optimality", "Ds-Optimality", "A-Optimality", "I-Optimality", "L-Optimality")) {
-    error_msg <- paste0(error_msg, "\n", crayon::red(cli::symbol$cross), " Choose a valid criterion: D-Optimality, Ds-Optimality, A-Optimality, I-Optimality or L-Optimality")
+  if (!criterion %in% c("D-Optimality", "Ds-Optimality", "A-Optimality",
+                        "I-Optimality", "L-Optimality", "Compound", "KL-Optimality")) {
+    error_msg <- paste0(error_msg, "\n", crayon::red(cli::symbol$cross),
+                        " Choose a valid criterion: D-Optimality, Ds-Optimality, A-Optimality, I-Optimality, L-Optimality, Compound or KL-Optimality")
   }
 
   # Check that the model is a formula
@@ -39,9 +40,10 @@ check_inputs <- function(criterion, model, parameters, par_values, design_space,
   if (!all(purrr::map_lgl(parameters, function(x) grepl(x, paste(format(model),collapse=""))))) {
     error_msg <- paste0(error_msg, "\n", crayon::red(cli::symbol$cross), " The model must contain all the parameters")
   }
-  # Check that x is in the formula
-  if (!grepl("x", paste(format(model),collapse=""))) {
-    error_msg <- paste0(error_msg, "\n", crayon::red(cli::symbol$cross), " The model must use x as the variable")
+  # Check that at least one design variable is present (x for 1D, x1/x2/... for multi-factor)
+  if (!grepl("x", paste(format(model), collapse = ""))) {
+    error_msg <- paste0(error_msg, "\n", crayon::red(cli::symbol$cross),
+                        " The model must contain a design variable: 'x' for single-factor models or 'x1', 'x2', ... for multi-factor models")
   }
 
   # Check that par_values is a numeric vector
@@ -54,9 +56,11 @@ check_inputs <- function(criterion, model, parameters, par_values, design_space,
     error_msg <- paste0(error_msg, "\n", crayon::red(cli::symbol$cross), " parameters must be of the same length as par_values")
   }
 
-  # Check that design space is a length 2 numeric vector
-  if (!is.numeric(design_space) || !is.atomic(design_space) || !is.vector(design_space) || length(design_space) != 2) {
-    error_msg <- paste0(error_msg, "\n", crayon::red(cli::symbol$cross), " design_space must be numeric vector of length 2")
+  # design_space has been canonicalised to a named list by opt_des before this call
+  if (!is.list(design_space) ||
+      !all(sapply(design_space, function(ds) is.numeric(ds) && length(ds) == 2L))) {
+    error_msg <- paste0(error_msg, "\n", crayon::red(cli::symbol$cross),
+                        " design_space must be a named list of numeric c(min, max) pairs")
   }
 
   # Check that init_design is a dataframe
@@ -64,9 +68,11 @@ check_inputs <- function(criterion, model, parameters, par_values, design_space,
     error_msg <- paste0(error_msg, "\n", crayon::red(cli::symbol$cross), " init_design must be a dataframe")
   }
 
-  # Check the names of init_design
-  if (!identical(names(init_design), c("Point", "Weight"))) {
-    error_msg <- paste0(error_msg, "\n", crayon::red(cli::symbol$cross), " init_design must have two columns: Point and Weight")
+  # Check the names of init_design: last column must be "Weight";
+  # remaining columns are the design variables (already normalised by opt_des)
+  if (!"Weight" %in% names(init_design) || ncol(init_design) < 2L) {
+    error_msg <- paste0(error_msg, "\n", crayon::red(cli::symbol$cross),
+                        " init_design must have a 'Weight' column and at least one design-variable column")
   }
 
   # Check that join_thresh is numeric
@@ -134,13 +140,24 @@ check_inputs <- function(criterion, model, parameters, par_values, design_space,
 
   # If I-Optimality check reg_int
   if (criterion == "I-Optimality") {
-    # Check that matB or reg_int are provided
     if (is.null(reg_int)) {
       error_msg <- paste0(error_msg, "\n", crayon::red(cli::symbol$cross), " reg_int must be provided for I-Optimality")
     }
-    # Check that reg_int is a numeric vector of length 2
-    if (!is.null(reg_int) && (!is.numeric(reg_int) || !is.atomic(reg_int) || !is.vector(reg_int) || length(reg_int) != 2)) {
-      error_msg <- paste0(error_msg, "\n", crayon::red(cli::symbol$cross), " reg_int must be numeric vector of length 2")
+    if (!is.null(reg_int)) {
+      if (is.numeric(reg_int)) {
+        # 1D: must be c(min, max)
+        if (length(reg_int) != 2L)
+          error_msg <- paste0(error_msg, "\n", crayon::red(cli::symbol$cross),
+                              " reg_int must be a numeric vector of length 2 for single-factor models")
+      } else if (is.list(reg_int)) {
+        # Multi-factor: named list of c(min, max) pairs
+        if (!all(sapply(reg_int, function(r) is.numeric(r) && length(r) == 2L)))
+          error_msg <- paste0(error_msg, "\n", crayon::red(cli::symbol$cross),
+                              " Each element of reg_int must be a numeric c(min, max) pair")
+      } else {
+        error_msg <- paste0(error_msg, "\n", crayon::red(cli::symbol$cross),
+                            " reg_int must be a numeric vector c(min, max) for 1D or a named list for multi-factor models")
+      }
     }
   }
   # If L-Optimality check matB

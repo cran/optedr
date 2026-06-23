@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Introduction to optedr: optimal designs for non-linear models</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Introduction to optedr: optimal designs for
+non-linear models</h1>
+
+
+
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(optedr)</span></code></pre></div>
+<div id="the-optimal-design-problem" class="section level2">
+<h2>The optimal design problem</h2>
+<p>In non-linear regression the information that an experiment provides
+about the model parameters depends on <em>where</em> observations are
+taken, not just how many. The Fisher information matrix at a design
+point <span class="math inline">\(x\)</span> is</p>
+<p><span class="math display">\[M(\xi) = \int f(x)\, f(x)^{\top} \,
+\xi(dx),\]</span></p>
+<p>where <span class="math inline">\(f(x) = \nabla_\theta \mu(x,
+\theta)\)</span> is the gradient of the mean response. Different
+optimality criteria summarise <span class="math inline">\(M(\xi)\)</span> into a single number to
+minimise:</p>
+<table>
+<colgroup>
+<col width="31%" />
+<col width="31%" />
+<col width="37%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Criterion</th>
+<th>Objective</th>
+<th>Key argument</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>D-Optimality</td>
+<td><span class="math inline">\(-\log\det M\)</span></td>
+<td>—</td>
+</tr>
+<tr class="even">
+<td>Ds-Optimality</td>
+<td>focuses on a subset of parameters</td>
+<td><code>par_int</code></td>
+</tr>
+<tr class="odd">
+<td>A-Optimality</td>
+<td><span class="math inline">\(\operatorname{tr} M^{-1}\)</span></td>
+<td>—</td>
+</tr>
+<tr class="even">
+<td>I-Optimality</td>
+<td>integrated prediction variance over a region</td>
+<td><code>reg_int</code></td>
+</tr>
+<tr class="odd">
+<td>L-Optimality</td>
+<td><span class="math inline">\(\operatorname{tr}(B \, M^{-1})\)</span>
+for user-supplied <span class="math inline">\(B\)</span></td>
+<td><code>matB</code></td>
+</tr>
+</tbody>
+</table>
+<p>All are computed with <code>opt_des()</code>, which implements the
+cocktail algorithm (Yu, 2011).</p>
+</div>
+<div id="a-first-example-d-optimality-in-one-factor" class="section level2">
+<h2>A first example: D-Optimality in one factor</h2>
+<p>The Antoine equation models vapour pressure as a function of
+temperature. With two parameters and one design variable the D-optimal
+design has exactly two support points.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>result_D <span class="ot">&lt;-</span> <span class="fu">opt_des</span>(</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>  <span class="at">criterion    =</span> <span class="st">&quot;D-Optimality&quot;</span>,</span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>  <span class="at">model        =</span> y <span class="sc">~</span> a <span class="sc">*</span> <span class="fu">exp</span>(<span class="sc">-</span>b <span class="sc">/</span> x),</span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>  <span class="at">parameters   =</span> <span class="fu">c</span>(<span class="st">&quot;a&quot;</span>, <span class="st">&quot;b&quot;</span>),</span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>  <span class="at">par_values   =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1500</span>),</span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>  <span class="at">design_space =</span> <span class="fu">c</span>(<span class="dv">212</span>, <span class="dv">422</span>)</span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>)</span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a><span class="co">#&gt; ℹ Stop condition not reached, max iterations performed</span></span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a>⠙ Calculating optimal design <span class="dv">22</span> <span class="fu">done</span> (<span class="dv">33</span><span class="sc">/</span>s) <span class="sc">|</span> 664ms</span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a>ℹ The lower bound <span class="cf">for</span> efficiency is <span class="fl">99.9982181686267</span>%</span>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a>                                                    </span>
+<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a>result_D</span>
+<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a><span class="co">#&gt; Optimal design for D-Optimality:</span></span>
+<span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a><span class="co">#&gt;      Point    Weight</span></span>
+<span id="cb2-18"><a href="#cb2-18" tabindex="-1"></a><span class="co">#&gt; 1 329.2963 0.5000089</span></span>
+<span id="cb2-19"><a href="#cb2-19" tabindex="-1"></a><span class="co">#&gt; 2 422.0000 0.4999911</span></span></code></pre></div>
+<p><code>plot()</code> shows the sensitivity function <span class="math inline">\(d(x, \xi)\)</span>. By the Equivalence Theorem the
+design is optimal if and only if <span class="math inline">\(d(x, \xi)
+\leq k\)</span> everywhere, with equality at every support point.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">plot</span>(result_D)</span></code></pre></div>
+<div class="figure">
+<img src="data:image/png;base64,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" alt="Sensitivity function for the D-optimal design." width="90%" />
+<p class="caption">
+Sensitivity function for the D-optimal design.
+</p>
+</div>
+<p><code>summary()</code> gives a fuller breakdown including the
+criterion value and convergence diagnostics.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="fu">summary</span>(result_D)</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a><span class="co">#&gt; Model:</span></span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a><span class="co">#&gt; y ~ a * exp(-b/x)</span></span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="co">#&gt; Weight function:</span></span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a><span class="co">#&gt; function (x) </span></span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a><span class="co">#&gt; 1 </span></span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a><span class="co">#&gt; Optimal design for D-Optimality:</span></span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a><span class="co">#&gt;      Point    Weight</span></span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a><span class="co">#&gt; 1 329.2963 0.5000089</span></span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a><span class="co">#&gt; 2 422.0000 0.4999911</span></span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a><span class="co">#&gt; Minimum efficiency (Atwood): 99.9982181686267%</span></span>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a><span class="co">#&gt; Criterion value:             9.97281e+06</span></span></code></pre></div>
+<p>The <code>$atwood</code> component reports the Atwood criterion
+(percentage deviation from the theoretical optimum bound): values close
+to 100 % confirm convergence.</p>
+</div>
+<div id="other-optimality-criteria" class="section level2">
+<h2>Other optimality criteria</h2>
+<div id="ds-optimality" class="section level3">
+<h3>Ds-Optimality</h3>
+<p><code>par_int</code> selects the indices of the parameters of
+interest. Here we focus only on <code>th0</code>:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>result_Ds <span class="ot">&lt;-</span> <span class="fu">opt_des</span>(</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>  <span class="at">criterion    =</span> <span class="st">&quot;Ds-Optimality&quot;</span>,</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>  <span class="at">model        =</span> y <span class="sc">~</span> th0 <span class="sc">*</span> <span class="fu">exp</span>(x <span class="sc">/</span> th1),</span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>  <span class="at">parameters   =</span> <span class="fu">c</span>(<span class="st">&quot;th0&quot;</span>, <span class="st">&quot;th1&quot;</span>),</span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>  <span class="at">par_values   =</span> <span class="fu">c</span>(<span class="fl">10.4963</span>, <span class="sc">-</span><span class="fl">3.2940</span>),</span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>  <span class="at">design_space =</span> <span class="fu">c</span>(<span class="fl">0.94</span>, <span class="dv">30</span>),</span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>  <span class="at">par_int      =</span> <span class="fu">c</span>(<span class="dv">1</span>)</span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a>)</span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a><span class="co">#&gt; ℹ Stop condition reached: difference between sensitivity and criterion &lt; 1e-05</span></span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a>⠙ Calculating optimal design <span class="dv">9</span> <span class="fu">done</span> (<span class="dv">31</span><span class="sc">/</span>s) <span class="sc">|</span> 288ms</span>
+<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a>ℹ The lower bound <span class="cf">for</span> efficiency is <span class="fl">99.9998969351635</span>%</span>
+<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a>                                                   </span>
+<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a>result_Ds</span>
+<span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a><span class="co">#&gt; Optimal design for Ds-Optimality:</span></span>
+<span id="cb5-18"><a href="#cb5-18" tabindex="-1"></a><span class="co">#&gt;      Point    Weight</span></span>
+<span id="cb5-19"><a href="#cb5-19" tabindex="-1"></a><span class="co">#&gt; 1 0.940000 0.6042053</span></span>
+<span id="cb5-20"><a href="#cb5-20" tabindex="-1"></a><span class="co">#&gt; 2 5.147919 0.3957947</span></span></code></pre></div>
+</div>
+<div id="a-optimality" class="section level3">
+<h3>A-Optimality</h3>
+<p>Minimises the average variance of the parameter estimators:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>result_A <span class="ot">&lt;-</span> <span class="fu">opt_des</span>(</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>  <span class="at">criterion    =</span> <span class="st">&quot;A-Optimality&quot;</span>,</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>  <span class="at">model        =</span> y <span class="sc">~</span> a <span class="sc">*</span> <span class="fu">exp</span>(<span class="sc">-</span>b <span class="sc">/</span> x),</span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>  <span class="at">parameters   =</span> <span class="fu">c</span>(<span class="st">&quot;a&quot;</span>, <span class="st">&quot;b&quot;</span>),</span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>  <span class="at">par_values   =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1500</span>),</span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>  <span class="at">design_space =</span> <span class="fu">c</span>(<span class="dv">212</span>, <span class="dv">422</span>)</span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a>)</span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a><span class="co">#&gt; ℹ Stop condition not reached, max iterations performed</span></span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a>⠙ Calculating optimal design <span class="dv">22</span> <span class="fu">done</span> (<span class="dv">35</span><span class="sc">/</span>s) <span class="sc">|</span> 629ms</span>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a>ℹ The lower bound <span class="cf">for</span> efficiency is <span class="fl">99.9999982911678</span>%</span>
+<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a>                                                    </span>
+<span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a>result_A</span>
+<span id="cb6-16"><a href="#cb6-16" tabindex="-1"></a><span class="co">#&gt; Optimal design for A-Optimality:</span></span>
+<span id="cb6-17"><a href="#cb6-17" tabindex="-1"></a><span class="co">#&gt;      Point    Weight</span></span>
+<span id="cb6-18"><a href="#cb6-18" tabindex="-1"></a><span class="co">#&gt; 1 310.3784 0.7821613</span></span>
+<span id="cb6-19"><a href="#cb6-19" tabindex="-1"></a><span class="co">#&gt; 2 422.0000 0.2178387</span></span></code></pre></div>
+</div>
+<div id="i-optimality" class="section level3">
+<h3>I-Optimality</h3>
+<p>Minimises the integrated prediction variance over a region of
+interest <code>reg_int</code>. Useful when prediction in a specific
+sub-range matters more than global estimation:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>result_I <span class="ot">&lt;-</span> <span class="fu">opt_des</span>(</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>  <span class="at">criterion    =</span> <span class="st">&quot;I-Optimality&quot;</span>,</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>  <span class="at">model        =</span> y <span class="sc">~</span> a <span class="sc">*</span> <span class="fu">exp</span>(<span class="sc">-</span>b <span class="sc">/</span> x),</span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>  <span class="at">parameters   =</span> <span class="fu">c</span>(<span class="st">&quot;a&quot;</span>, <span class="st">&quot;b&quot;</span>),</span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>  <span class="at">par_values   =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1500</span>),</span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>  <span class="at">design_space =</span> <span class="fu">c</span>(<span class="dv">212</span>, <span class="dv">422</span>),</span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a>  <span class="at">reg_int      =</span> <span class="fu">c</span>(<span class="dv">380</span>, <span class="dv">422</span>)</span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a>)</span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a><span class="co">#&gt; ℹ Stop condition reached: difference between sensitivity and criterion &lt; 1e-05</span></span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a>⠙ Calculating optimal design <span class="dv">5</span> <span class="fu">done</span> (<span class="dv">42</span><span class="sc">/</span>s) <span class="sc">|</span> 119ms</span>
+<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a>ℹ The lower bound <span class="cf">for</span> efficiency is <span class="fl">99.9999993787934</span>%</span>
+<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a>                                                   </span>
+<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a>result_I</span>
+<span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a><span class="co">#&gt; Optimal design for I-Optimality:</span></span>
+<span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a><span class="co">#&gt;     Point    Weight</span></span>
+<span id="cb7-19"><a href="#cb7-19" tabindex="-1"></a><span class="co">#&gt; 1 357.518 0.4346119</span></span>
+<span id="cb7-20"><a href="#cb7-20" tabindex="-1"></a><span class="co">#&gt; 2 422.000 0.5653881</span></span></code></pre></div>
+</div>
+<div id="l-optimality" class="section level3">
+<h3>L-Optimality</h3>
+<p><code>matB</code> is a symmetric positive-semidefinite <span class="math inline">\(k \times k\)</span> matrix that selects which
+variances to minimise. Setting <code>matB = diag(c(1, 0))</code> focuses
+entirely on the variance of <code>a</code>:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>result_L <span class="ot">&lt;-</span> <span class="fu">opt_des</span>(</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>  <span class="at">criterion    =</span> <span class="st">&quot;L-Optimality&quot;</span>,</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>  <span class="at">model        =</span> y <span class="sc">~</span> a <span class="sc">*</span> <span class="fu">exp</span>(<span class="sc">-</span>b <span class="sc">/</span> x),</span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a>  <span class="at">parameters   =</span> <span class="fu">c</span>(<span class="st">&quot;a&quot;</span>, <span class="st">&quot;b&quot;</span>),</span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a>  <span class="at">par_values   =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1500</span>),</span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a>  <span class="at">design_space =</span> <span class="fu">c</span>(<span class="dv">212</span>, <span class="dv">422</span>),</span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a>  <span class="at">matB         =</span> <span class="fu">diag</span>(<span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">0</span>))</span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a>)</span>
+<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a><span class="co">#&gt; ℹ Stop condition reached: difference between sensitivity and criterion &lt; 1e-05</span></span>
+<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a>⠙ Calculating optimal design <span class="dv">22</span> <span class="fu">done</span> (<span class="dv">34</span><span class="sc">/</span>s) <span class="sc">|</span> 642ms</span>
+<span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a>ℹ The lower bound <span class="cf">for</span> efficiency is <span class="fl">99.9999982893632</span>%</span>
+<span id="cb8-14"><a href="#cb8-14" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb8-15"><a href="#cb8-15" tabindex="-1"></a>                                                    </span>
+<span id="cb8-16"><a href="#cb8-16" tabindex="-1"></a>result_L</span>
+<span id="cb8-17"><a href="#cb8-17" tabindex="-1"></a><span class="co">#&gt; Optimal design for L-Optimality:</span></span>
+<span id="cb8-18"><a href="#cb8-18" tabindex="-1"></a><span class="co">#&gt;      Point    Weight</span></span>
+<span id="cb8-19"><a href="#cb8-19" tabindex="-1"></a><span class="co">#&gt; 1 310.3784 0.7253377</span></span>
+<span id="cb8-20"><a href="#cb8-20" tabindex="-1"></a><span class="co">#&gt; 2 422.0000 0.2746623</span></span></code></pre></div>
+<p>Comparing D- and L-optimal designs shows how the support points shift
+when precision is concentrated on one parameter:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;D-optimal support:</span><span class="sc">\n</span><span class="st">&quot;</span>); <span class="fu">print</span>(result_D<span class="sc">$</span>optdes)</span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a><span class="co">#&gt; D-optimal support:</span></span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a><span class="co">#&gt;      Point    Weight</span></span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a><span class="co">#&gt; 1 329.2963 0.5000089</span></span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a><span class="co">#&gt; 2 422.0000 0.4999911</span></span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;L-optimal support:</span><span class="sc">\n</span><span class="st">&quot;</span>); <span class="fu">print</span>(result_L<span class="sc">$</span>optdes)</span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a><span class="co">#&gt; L-optimal support:</span></span>
+<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a><span class="co">#&gt;      Point    Weight</span></span>
+<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a><span class="co">#&gt; 1 310.3784 0.7253377</span></span>
+<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a><span class="co">#&gt; 2 422.0000 0.2746623</span></span></code></pre></div>
+</div>
+</div>
+<div id="multi-dimensional-design-spaces" class="section level2">
+<h2>Multi-dimensional design spaces</h2>
+<p>For models with two or more design variables pass
+<code>design_space</code> as a named list. Variable names in the list
+must match those used in <code>model</code>.</p>
+<div id="two-factor-model-bisubstrate-michaelis-menten" class="section level3">
+<h3>Two-factor model: bisubstrate Michaelis-Menten</h3>
+<p>Enzyme kinetics with two substrates: <span class="math inline">\(\mu
+= V_{\max} x_1 x_2 / [(K_1 + x_1)(K_2 + x_2)]\)</span>.</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a>result_2D <span class="ot">&lt;-</span> <span class="fu">opt_des</span>(</span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>  <span class="at">criterion    =</span> <span class="st">&quot;D-Optimality&quot;</span>,</span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a>  <span class="at">model        =</span> y <span class="sc">~</span> Vmax <span class="sc">*</span> x1 <span class="sc">*</span> x2 <span class="sc">/</span> ((K1 <span class="sc">+</span> x1) <span class="sc">*</span> (K2 <span class="sc">+</span> x2)),</span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a>  <span class="at">parameters   =</span> <span class="fu">c</span>(<span class="st">&quot;Vmax&quot;</span>, <span class="st">&quot;K1&quot;</span>, <span class="st">&quot;K2&quot;</span>),</span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a>  <span class="at">par_values   =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span>),</span>
+<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a>  <span class="at">design_space =</span> <span class="fu">list</span>(<span class="at">x1 =</span> <span class="fu">c</span>(<span class="fl">0.1</span>, <span class="dv">10</span>), <span class="at">x2 =</span> <span class="fu">c</span>(<span class="fl">0.1</span>, <span class="dv">10</span>))</span>
+<span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a>)</span>
+<span id="cb10-8"><a href="#cb10-8" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb10-9"><a href="#cb10-9" tabindex="-1"></a><span class="co">#&gt; ℹ Stop condition reached: difference between sensitivity and criterion &lt; 1e-05</span></span>
+<span id="cb10-10"><a href="#cb10-10" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb10-11"><a href="#cb10-11" tabindex="-1"></a>⠙ Calculating optimal design <span class="dv">14</span> <span class="fu">done</span> (<span class="dv">13</span><span class="sc">/</span>s) <span class="sc">|</span> 1s</span>
+<span id="cb10-12"><a href="#cb10-12" tabindex="-1"></a>ℹ The lower bound <span class="cf">for</span> efficiency is <span class="fl">99.9990270465501</span>%</span>
+<span id="cb10-13"><a href="#cb10-13" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb10-14"><a href="#cb10-14" tabindex="-1"></a>                                                 </span>
+<span id="cb10-15"><a href="#cb10-15" tabindex="-1"></a>result_2D</span>
+<span id="cb10-16"><a href="#cb10-16" tabindex="-1"></a><span class="co">#&gt; Optimal design for D-Optimality (2 factors):</span></span>
+<span id="cb10-17"><a href="#cb10-17" tabindex="-1"></a><span class="co">#&gt;           x1         x2    Weight</span></span>
+<span id="cb10-18"><a href="#cb10-18" tabindex="-1"></a><span class="co">#&gt; 1  0.8322886 10.0000000 0.3333304</span></span>
+<span id="cb10-19"><a href="#cb10-19" tabindex="-1"></a><span class="co">#&gt; 2 10.0000000  0.8343059 0.3333391</span></span>
+<span id="cb10-20"><a href="#cb10-20" tabindex="-1"></a><span class="co">#&gt; 3 10.0000000 10.0000000 0.3333304</span></span></code></pre></div>
+<p><code>plot()</code> for a two-factor model returns a viridis heatmap
+of the sensitivity function, with the support points overlaid in
+red:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="fu">plot</span>(result_2D)</span></code></pre></div>
+<div class="figure">
+<img src="data:image/png;base64,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" alt="Sensitivity heatmap for the 2D D-optimal design." width="90%" />
+<p class="caption">
+Sensitivity heatmap for the 2D D-optimal design.
+</p>
+</div>
+<p>L-Optimality extends naturally to multi-dimensional spaces. Here we
+minimise only the variance of <span class="math inline">\(K_1\)</span>:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a>result_2D_L <span class="ot">&lt;-</span> <span class="fu">opt_des</span>(</span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a>  <span class="at">criterion    =</span> <span class="st">&quot;L-Optimality&quot;</span>,</span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a>  <span class="at">model        =</span> y <span class="sc">~</span> Vmax <span class="sc">*</span> x1 <span class="sc">*</span> x2 <span class="sc">/</span> ((K1 <span class="sc">+</span> x1) <span class="sc">*</span> (K2 <span class="sc">+</span> x2)),</span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a>  <span class="at">parameters   =</span> <span class="fu">c</span>(<span class="st">&quot;Vmax&quot;</span>, <span class="st">&quot;K1&quot;</span>, <span class="st">&quot;K2&quot;</span>),</span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a>  <span class="at">par_values   =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span>),</span>
+<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a>  <span class="at">design_space =</span> <span class="fu">list</span>(<span class="at">x1 =</span> <span class="fu">c</span>(<span class="fl">0.1</span>, <span class="dv">10</span>), <span class="at">x2 =</span> <span class="fu">c</span>(<span class="fl">0.1</span>, <span class="dv">10</span>)),</span>
+<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a>  <span class="at">matB         =</span> <span class="fu">diag</span>(<span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">0</span>))</span>
+<span id="cb12-8"><a href="#cb12-8" tabindex="-1"></a>)</span>
+<span id="cb12-9"><a href="#cb12-9" tabindex="-1"></a><span class="co">#&gt; Warning: The information matrix has 1 near-zero singular value(s) (rank 2 out</span></span>
+<span id="cb12-10"><a href="#cb12-10" tabindex="-1"></a><span class="co">#&gt; of 3). The model likely has 1 fewer identifiable parameter(s) than specified</span></span>
+<span id="cb12-11"><a href="#cb12-11" tabindex="-1"></a><span class="co">#&gt; -check for parameter redundancy or collinearity.</span></span>
+<span id="cb12-12"><a href="#cb12-12" tabindex="-1"></a><span class="co">#&gt; Warning: The information matrix has 1 near-zero singular value(s) (rank 2 out</span></span>
+<span id="cb12-13"><a href="#cb12-13" tabindex="-1"></a><span class="co">#&gt; of 3). The model likely has 1 fewer identifiable parameter(s) than specified</span></span>
+<span id="cb12-14"><a href="#cb12-14" tabindex="-1"></a><span class="co">#&gt; -check for parameter redundancy or collinearity.</span></span>
+<span id="cb12-15"><a href="#cb12-15" tabindex="-1"></a><span class="co">#&gt; Warning: The information matrix has 1 near-zero singular value(s) (rank 2 out</span></span>
+<span id="cb12-16"><a href="#cb12-16" tabindex="-1"></a><span class="co">#&gt; of 3). The model likely has 1 fewer identifiable parameter(s) than specified</span></span>
+<span id="cb12-17"><a href="#cb12-17" tabindex="-1"></a><span class="co">#&gt; -check for parameter redundancy or collinearity.</span></span>
+<span id="cb12-18"><a href="#cb12-18" tabindex="-1"></a><span class="co">#&gt; Warning: The information matrix has 1 near-zero singular value(s) (rank 2 out</span></span>
+<span id="cb12-19"><a href="#cb12-19" tabindex="-1"></a><span class="co">#&gt; of 3). The model likely has 1 fewer identifiable parameter(s) than specified</span></span>
+<span id="cb12-20"><a href="#cb12-20" tabindex="-1"></a><span class="co">#&gt; -check for parameter redundancy or collinearity.</span></span>
+<span id="cb12-21"><a href="#cb12-21" tabindex="-1"></a><span class="co">#&gt; Warning: The information matrix has 1 near-zero singular value(s) (rank 2 out</span></span>
+<span id="cb12-22"><a href="#cb12-22" tabindex="-1"></a><span class="co">#&gt; of 3). The model likely has 1 fewer identifiable parameter(s) than specified</span></span>
+<span id="cb12-23"><a href="#cb12-23" tabindex="-1"></a><span class="co">#&gt; -check for parameter redundancy or collinearity.</span></span>
+<span id="cb12-24"><a href="#cb12-24" tabindex="-1"></a><span class="co">#&gt; Warning: The information matrix has 1 near-zero singular value(s) (rank 2 out</span></span>
+<span id="cb12-25"><a href="#cb12-25" tabindex="-1"></a><span class="co">#&gt; of 3). The model likely has 1 fewer identifiable parameter(s) than specified</span></span>
+<span id="cb12-26"><a href="#cb12-26" tabindex="-1"></a><span class="co">#&gt; -check for parameter redundancy or collinearity.</span></span>
+<span id="cb12-27"><a href="#cb12-27" tabindex="-1"></a><span class="co">#&gt; Warning: The information matrix has 1 near-zero singular value(s) (rank 2 out</span></span>
+<span id="cb12-28"><a href="#cb12-28" tabindex="-1"></a><span class="co">#&gt; of 3). The model likely has 1 fewer identifiable parameter(s) than specified</span></span>
+<span id="cb12-29"><a href="#cb12-29" tabindex="-1"></a><span class="co">#&gt; -check for parameter redundancy or collinearity.</span></span>
+<span id="cb12-30"><a href="#cb12-30" tabindex="-1"></a><span class="co">#&gt; Warning: The information matrix has 1 near-zero singular value(s) (rank 2 out</span></span>
+<span id="cb12-31"><a href="#cb12-31" tabindex="-1"></a><span class="co">#&gt; of 3). The model likely has 1 fewer identifiable parameter(s) than specified</span></span>
+<span id="cb12-32"><a href="#cb12-32" tabindex="-1"></a><span class="co">#&gt; -check for parameter redundancy or collinearity.</span></span>
+<span id="cb12-33"><a href="#cb12-33" tabindex="-1"></a><span class="co">#&gt; Warning: The information matrix has 1 near-zero singular value(s) (rank 2 out</span></span>
+<span id="cb12-34"><a href="#cb12-34" tabindex="-1"></a><span class="co">#&gt; of 3). The model likely has 1 fewer identifiable parameter(s) than specified</span></span>
+<span id="cb12-35"><a href="#cb12-35" tabindex="-1"></a><span class="co">#&gt; -check for parameter redundancy or collinearity.</span></span>
+<span id="cb12-36"><a href="#cb12-36" tabindex="-1"></a><span class="co">#&gt; Warning: The information matrix has 1 near-zero singular value(s) (rank 2 out</span></span>
+<span id="cb12-37"><a href="#cb12-37" tabindex="-1"></a><span class="co">#&gt; of 3). The model likely has 1 fewer identifiable parameter(s) than specified</span></span>
+<span id="cb12-38"><a href="#cb12-38" tabindex="-1"></a><span class="co">#&gt; -check for parameter redundancy or collinearity.</span></span>
+<span id="cb12-39"><a href="#cb12-39" tabindex="-1"></a><span class="co">#&gt; Warning: The information matrix has 1 near-zero singular value(s) (rank 2 out</span></span>
+<span id="cb12-40"><a href="#cb12-40" tabindex="-1"></a><span class="co">#&gt; of 3). The model likely has 1 fewer identifiable parameter(s) than specified</span></span>
+<span id="cb12-41"><a href="#cb12-41" tabindex="-1"></a><span class="co">#&gt; -check for parameter redundancy or collinearity.</span></span>
+<span id="cb12-42"><a href="#cb12-42" tabindex="-1"></a><span class="co">#&gt; Warning: The information matrix has 1 near-zero singular value(s) (rank 2 out</span></span>
+<span id="cb12-43"><a href="#cb12-43" tabindex="-1"></a><span class="co">#&gt; of 3). The model likely has 1 fewer identifiable parameter(s) than specified</span></span>
+<span id="cb12-44"><a href="#cb12-44" tabindex="-1"></a><span class="co">#&gt; -check for parameter redundancy or collinearity.</span></span>
+<span id="cb12-45"><a href="#cb12-45" tabindex="-1"></a><span class="co">#&gt; Warning: The information matrix has 1 near-zero singular value(s) (rank 2 out</span></span>
+<span id="cb12-46"><a href="#cb12-46" tabindex="-1"></a><span class="co">#&gt; of 3). The model likely has 1 fewer identifiable parameter(s) than specified</span></span>
+<span id="cb12-47"><a href="#cb12-47" tabindex="-1"></a><span class="co">#&gt; -check for parameter redundancy or collinearity.</span></span>
+<span id="cb12-48"><a href="#cb12-48" tabindex="-1"></a><span class="co">#&gt; Warning: The information matrix has 1 near-zero singular value(s) (rank 2 out</span></span>
+<span id="cb12-49"><a href="#cb12-49" tabindex="-1"></a><span class="co">#&gt; of 3). The model likely has 1 fewer identifiable parameter(s) than specified</span></span>
+<span id="cb12-50"><a href="#cb12-50" tabindex="-1"></a><span class="co">#&gt; -check for parameter redundancy or collinearity.</span></span>
+<span id="cb12-51"><a href="#cb12-51" tabindex="-1"></a><span class="co">#&gt; Warning: The information matrix has 1 near-zero singular value(s) (rank 2 out</span></span>
+<span id="cb12-52"><a href="#cb12-52" tabindex="-1"></a><span class="co">#&gt; of 3). The model likely has 1 fewer identifiable parameter(s) than specified</span></span>
+<span id="cb12-53"><a href="#cb12-53" tabindex="-1"></a><span class="co">#&gt; -check for parameter redundancy or collinearity.</span></span>
+<span id="cb12-54"><a href="#cb12-54" tabindex="-1"></a><span class="co">#&gt; Warning: The information matrix has 1 near-zero singular value(s) (rank 2 out</span></span>
+<span id="cb12-55"><a href="#cb12-55" tabindex="-1"></a><span class="co">#&gt; of 3). The model likely has 1 fewer identifiable parameter(s) than specified</span></span>
+<span id="cb12-56"><a href="#cb12-56" tabindex="-1"></a><span class="co">#&gt; -check for parameter redundancy or collinearity.</span></span>
+<span id="cb12-57"><a href="#cb12-57" tabindex="-1"></a><span class="co">#&gt; Warning: The information matrix has 1 near-zero singular value(s) (rank 2 out</span></span>
+<span id="cb12-58"><a href="#cb12-58" tabindex="-1"></a><span class="co">#&gt; of 3). The model likely has 1 fewer identifiable parameter(s) than specified</span></span>
+<span id="cb12-59"><a href="#cb12-59" tabindex="-1"></a><span class="co">#&gt; -check for parameter redundancy or collinearity.</span></span>
+<span id="cb12-60"><a href="#cb12-60" tabindex="-1"></a><span class="co">#&gt; Warning: The information matrix has 1 near-zero singular value(s) (rank 2 out</span></span>
+<span id="cb12-61"><a href="#cb12-61" tabindex="-1"></a><span class="co">#&gt; of 3). The model likely has 1 fewer identifiable parameter(s) than specified</span></span>
+<span id="cb12-62"><a href="#cb12-62" tabindex="-1"></a><span class="co">#&gt; -check for parameter redundancy or collinearity.</span></span>
+<span id="cb12-63"><a href="#cb12-63" tabindex="-1"></a><span class="co">#&gt; Warning: The information matrix has 1 near-zero singular value(s) (rank 2 out</span></span>
+<span id="cb12-64"><a href="#cb12-64" tabindex="-1"></a><span class="co">#&gt; of 3). The model likely has 1 fewer identifiable parameter(s) than specified</span></span>
+<span id="cb12-65"><a href="#cb12-65" tabindex="-1"></a><span class="co">#&gt; -check for parameter redundancy or collinearity.</span></span>
+<span id="cb12-66"><a href="#cb12-66" tabindex="-1"></a><span class="co">#&gt; Warning: The information matrix has 1 near-zero singular value(s) (rank 2 out</span></span>
+<span id="cb12-67"><a href="#cb12-67" tabindex="-1"></a><span class="co">#&gt; of 3). The model likely has 1 fewer identifiable parameter(s) than specified</span></span>
+<span id="cb12-68"><a href="#cb12-68" tabindex="-1"></a><span class="co">#&gt; -check for parameter redundancy or collinearity.</span></span>
+<span id="cb12-69"><a href="#cb12-69" tabindex="-1"></a><span class="co">#&gt; Warning: The information matrix has 1 near-zero singular value(s) (rank 2 out</span></span>
+<span id="cb12-70"><a href="#cb12-70" tabindex="-1"></a><span class="co">#&gt; of 3). The model likely has 1 fewer identifiable parameter(s) than specified</span></span>
+<span id="cb12-71"><a href="#cb12-71" tabindex="-1"></a><span class="co">#&gt; -check for parameter redundancy or collinearity.</span></span>
+<span id="cb12-72"><a href="#cb12-72" tabindex="-1"></a><span class="co">#&gt; Warning: The information matrix has 1 near-zero singular value(s) (rank 2 out</span></span>
+<span id="cb12-73"><a href="#cb12-73" tabindex="-1"></a><span class="co">#&gt; of 3). The model likely has 1 fewer identifiable parameter(s) than specified</span></span>
+<span id="cb12-74"><a href="#cb12-74" tabindex="-1"></a><span class="co">#&gt; -check for parameter redundancy or collinearity.</span></span>
+<span id="cb12-75"><a href="#cb12-75" tabindex="-1"></a><span class="co">#&gt; Warning: The information matrix has 1 near-zero singular value(s) (rank 2 out</span></span>
+<span id="cb12-76"><a href="#cb12-76" tabindex="-1"></a><span class="co">#&gt; of 3). The model likely has 1 fewer identifiable parameter(s) than specified</span></span>
+<span id="cb12-77"><a href="#cb12-77" tabindex="-1"></a><span class="co">#&gt; -check for parameter redundancy or collinearity.</span></span>
+<span id="cb12-78"><a href="#cb12-78" tabindex="-1"></a><span class="co">#&gt; Warning: The information matrix has 1 near-zero singular value(s) (rank 2 out</span></span>
+<span id="cb12-79"><a href="#cb12-79" tabindex="-1"></a><span class="co">#&gt; of 3). The model likely has 1 fewer identifiable parameter(s) than specified</span></span>
+<span id="cb12-80"><a href="#cb12-80" tabindex="-1"></a><span class="co">#&gt; -check for parameter redundancy or collinearity.</span></span>
+<span id="cb12-81"><a href="#cb12-81" tabindex="-1"></a><span class="co">#&gt; Warning: The information matrix has 1 near-zero singular value(s) (rank 2 out</span></span>
+<span id="cb12-82"><a href="#cb12-82" tabindex="-1"></a><span class="co">#&gt; of 3). The model likely has 1 fewer identifiable parameter(s) than specified</span></span>
+<span id="cb12-83"><a href="#cb12-83" tabindex="-1"></a><span class="co">#&gt; -check for parameter redundancy or collinearity.</span></span>
+<span id="cb12-84"><a href="#cb12-84" tabindex="-1"></a><span class="co">#&gt; Warning: The information matrix has 1 near-zero singular value(s) (rank 2 out</span></span>
+<span id="cb12-85"><a href="#cb12-85" tabindex="-1"></a><span class="co">#&gt; of 3). The model likely has 1 fewer identifiable parameter(s) than specified</span></span>
+<span id="cb12-86"><a href="#cb12-86" tabindex="-1"></a><span class="co">#&gt; -check for parameter redundancy or collinearity.</span></span>
+<span id="cb12-87"><a href="#cb12-87" tabindex="-1"></a><span class="co">#&gt; Warning: The information matrix has 1 near-zero singular value(s) (rank 2 out</span></span>
+<span id="cb12-88"><a href="#cb12-88" tabindex="-1"></a><span class="co">#&gt; of 3). The model likely has 1 fewer identifiable parameter(s) than specified</span></span>
+<span id="cb12-89"><a href="#cb12-89" tabindex="-1"></a><span class="co">#&gt; -check for parameter redundancy or collinearity.</span></span>
+<span id="cb12-90"><a href="#cb12-90" tabindex="-1"></a><span class="co">#&gt; Warning: The information matrix has 1 near-zero singular value(s) (rank 2 out</span></span>
+<span id="cb12-91"><a href="#cb12-91" tabindex="-1"></a><span class="co">#&gt; of 3). The model likely has 1 fewer identifiable parameter(s) than specified</span></span>
+<span id="cb12-92"><a href="#cb12-92" tabindex="-1"></a><span class="co">#&gt; -check for parameter redundancy or collinearity.</span></span>
+<span id="cb12-93"><a href="#cb12-93" tabindex="-1"></a><span class="co">#&gt; Warning: The information matrix has 1 near-zero singular value(s) (rank 2 out</span></span>
+<span id="cb12-94"><a href="#cb12-94" tabindex="-1"></a><span class="co">#&gt; of 3). The model likely has 1 fewer identifiable parameter(s) than specified</span></span>
+<span id="cb12-95"><a href="#cb12-95" tabindex="-1"></a><span class="co">#&gt; -check for parameter redundancy or collinearity.</span></span>
+<span id="cb12-96"><a href="#cb12-96" tabindex="-1"></a><span class="co">#&gt; Warning: The information matrix has 1 near-zero singular value(s) (rank 2 out</span></span>
+<span id="cb12-97"><a href="#cb12-97" tabindex="-1"></a><span class="co">#&gt; of 3). The model likely has 1 fewer identifiable parameter(s) than specified</span></span>
+<span id="cb12-98"><a href="#cb12-98" tabindex="-1"></a><span class="co">#&gt; -check for parameter redundancy or collinearity.</span></span>
+<span id="cb12-99"><a href="#cb12-99" tabindex="-1"></a><span class="co">#&gt; Warning: The information matrix has 1 near-zero singular value(s) (rank 2 out</span></span>
+<span id="cb12-100"><a href="#cb12-100" tabindex="-1"></a><span class="co">#&gt; of 3). The model likely has 1 fewer identifiable parameter(s) than specified</span></span>
+<span id="cb12-101"><a href="#cb12-101" tabindex="-1"></a><span class="co">#&gt; -check for parameter redundancy or collinearity.</span></span>
+<span id="cb12-102"><a href="#cb12-102" tabindex="-1"></a><span class="co">#&gt; Warning: The information matrix has 1 near-zero singular value(s) (rank 2 out</span></span>
+<span id="cb12-103"><a href="#cb12-103" tabindex="-1"></a><span class="co">#&gt; of 3). The model likely has 1 fewer identifiable parameter(s) than specified</span></span>
+<span id="cb12-104"><a href="#cb12-104" tabindex="-1"></a><span class="co">#&gt; -check for parameter redundancy or collinearity.</span></span>
+<span id="cb12-105"><a href="#cb12-105" tabindex="-1"></a><span class="co">#&gt; Warning: The information matrix has 1 near-zero singular value(s) (rank 2 out</span></span>
+<span id="cb12-106"><a href="#cb12-106" tabindex="-1"></a><span class="co">#&gt; of 3). The model likely has 1 fewer identifiable parameter(s) than specified</span></span>
+<span id="cb12-107"><a href="#cb12-107" tabindex="-1"></a><span class="co">#&gt; -check for parameter redundancy or collinearity.</span></span>
+<span id="cb12-108"><a href="#cb12-108" tabindex="-1"></a><span class="co">#&gt; Warning: The information matrix has 1 near-zero singular value(s) (rank 2 out</span></span>
+<span id="cb12-109"><a href="#cb12-109" tabindex="-1"></a><span class="co">#&gt; of 3). The model likely has 1 fewer identifiable parameter(s) than specified</span></span>
+<span id="cb12-110"><a href="#cb12-110" tabindex="-1"></a><span class="co">#&gt; -check for parameter redundancy or collinearity.</span></span>
+<span id="cb12-111"><a href="#cb12-111" tabindex="-1"></a><span class="co">#&gt; Warning: The information matrix has 1 near-zero singular value(s) (rank 2 out</span></span>
+<span id="cb12-112"><a href="#cb12-112" tabindex="-1"></a><span class="co">#&gt; of 3). The model likely has 1 fewer identifiable parameter(s) than specified</span></span>
+<span id="cb12-113"><a href="#cb12-113" tabindex="-1"></a><span class="co">#&gt; -check for parameter redundancy or collinearity.</span></span>
+<span id="cb12-114"><a href="#cb12-114" tabindex="-1"></a><span class="co">#&gt; Warning: The information matrix has 1 near-zero singular value(s) (rank 2 out</span></span>
+<span id="cb12-115"><a href="#cb12-115" tabindex="-1"></a><span class="co">#&gt; of 3). The model likely has 1 fewer identifiable parameter(s) than specified</span></span>
+<span id="cb12-116"><a href="#cb12-116" tabindex="-1"></a><span class="co">#&gt; -check for parameter redundancy or collinearity.</span></span>
+<span id="cb12-117"><a href="#cb12-117" tabindex="-1"></a><span class="co">#&gt; Warning: The information matrix has 1 near-zero singular value(s) (rank 2 out</span></span>
+<span id="cb12-118"><a href="#cb12-118" tabindex="-1"></a><span class="co">#&gt; of 3). The model likely has 1 fewer identifiable parameter(s) than specified</span></span>
+<span id="cb12-119"><a href="#cb12-119" tabindex="-1"></a><span class="co">#&gt; -check for parameter redundancy or collinearity.</span></span>
+<span id="cb12-120"><a href="#cb12-120" tabindex="-1"></a><span class="co">#&gt; Warning: The information matrix has 1 near-zero singular value(s) (rank 2 out</span></span>
+<span id="cb12-121"><a href="#cb12-121" tabindex="-1"></a><span class="co">#&gt; of 3). The model likely has 1 fewer identifiable parameter(s) than specified</span></span>
+<span id="cb12-122"><a href="#cb12-122" tabindex="-1"></a><span class="co">#&gt; -check for parameter redundancy or collinearity.</span></span>
+<span id="cb12-123"><a href="#cb12-123" tabindex="-1"></a><span class="co">#&gt; Warning: The information matrix has 1 near-zero singular value(s) (rank 2 out</span></span>
+<span id="cb12-124"><a href="#cb12-124" tabindex="-1"></a><span class="co">#&gt; of 3). The model likely has 1 fewer identifiable parameter(s) than specified</span></span>
+<span id="cb12-125"><a href="#cb12-125" tabindex="-1"></a><span class="co">#&gt; -check for parameter redundancy or collinearity.</span></span>
+<span id="cb12-126"><a href="#cb12-126" tabindex="-1"></a><span class="co">#&gt; Warning: The information matrix has 1 near-zero singular value(s) (rank 2 out</span></span>
+<span id="cb12-127"><a href="#cb12-127" tabindex="-1"></a><span class="co">#&gt; of 3). The model likely has 1 fewer identifiable parameter(s) than specified</span></span>
+<span id="cb12-128"><a href="#cb12-128" tabindex="-1"></a><span class="co">#&gt; -check for parameter redundancy or collinearity.</span></span>
+<span id="cb12-129"><a href="#cb12-129" tabindex="-1"></a><span class="co">#&gt; Warning: The information matrix has 1 near-zero singular value(s) (rank 2 out</span></span>
+<span id="cb12-130"><a href="#cb12-130" tabindex="-1"></a><span class="co">#&gt; of 3). The model likely has 1 fewer identifiable parameter(s) than specified</span></span>
+<span id="cb12-131"><a href="#cb12-131" tabindex="-1"></a><span class="co">#&gt; -check for parameter redundancy or collinearity.</span></span>
+<span id="cb12-132"><a href="#cb12-132" tabindex="-1"></a><span class="co">#&gt; Warning: The information matrix has 1 near-zero singular value(s) (rank 2 out</span></span>
+<span id="cb12-133"><a href="#cb12-133" tabindex="-1"></a><span class="co">#&gt; of 3). The model likely has 1 fewer identifiable parameter(s) than specified</span></span>
+<span id="cb12-134"><a href="#cb12-134" tabindex="-1"></a><span class="co">#&gt; -check for parameter redundancy or collinearity.</span></span>
+<span id="cb12-135"><a href="#cb12-135" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb12-136"><a href="#cb12-136" tabindex="-1"></a><span class="co">#&gt; ℹ Stop condition not reached, max iterations performed</span></span>
+<span id="cb12-137"><a href="#cb12-137" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb12-138"><a href="#cb12-138" tabindex="-1"></a>⠙ Calculating optimal design <span class="dv">22</span> <span class="fu">done</span> (<span class="dv">19</span><span class="sc">/</span>s) <span class="sc">|</span> <span class="fl">1.2</span>s</span>
+<span id="cb12-139"><a href="#cb12-139" tabindex="-1"></a><span class="co">#&gt; Warning: The Atwood efficiency bound is -412.6%, which is outside [0, 100].</span></span>
+<span id="cb12-140"><a href="#cb12-140" tabindex="-1"></a><span class="co">#&gt; This indicates a degenerate information matrix -the model is likely not</span></span>
+<span id="cb12-141"><a href="#cb12-141" tabindex="-1"></a><span class="co">#&gt; identifiable in all specified parameters. Check for parameter redundancy (see</span></span>
+<span id="cb12-142"><a href="#cb12-142" tabindex="-1"></a><span class="co">#&gt; any preceding warnings).</span></span>
+<span id="cb12-143"><a href="#cb12-143" tabindex="-1"></a><span class="co">#&gt; ℹ The lower bound for efficiency is -412.552180354584%</span></span>
+<span id="cb12-144"><a href="#cb12-144" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb12-145"><a href="#cb12-145" tabindex="-1"></a>                                                   </span>
+<span id="cb12-146"><a href="#cb12-146" tabindex="-1"></a>result_2D_L</span>
+<span id="cb12-147"><a href="#cb12-147" tabindex="-1"></a><span class="co">#&gt; Optimal design for L-Optimality (2 factors):</span></span>
+<span id="cb12-148"><a href="#cb12-148" tabindex="-1"></a><span class="co">#&gt;           x1 x2    Weight</span></span>
+<span id="cb12-149"><a href="#cb12-149" tabindex="-1"></a><span class="co">#&gt; 1  0.6043674 10 0.7070278</span></span>
+<span id="cb12-150"><a href="#cb12-150" tabindex="-1"></a><span class="co">#&gt; 2 10.0000000 10 0.2929722</span></span></code></pre></div>
+</div>
+<div id="three-factors-and-beyond" class="section level3">
+<h3>Three factors and beyond</h3>
+<p>For <span class="math inline">\(d \geq 3\)</span> factors
+<code>plot()</code> switches to a scatter-matrix with <span class="math inline">\(\binom{d}{2}\)</span> panels, one per pair of
+variables. Point size is proportional to weight.</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a>result_3D <span class="ot">&lt;-</span> <span class="fu">opt_des</span>(</span>
+<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a>  <span class="at">criterion    =</span> <span class="st">&quot;D-Optimality&quot;</span>,</span>
+<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a>  <span class="at">model        =</span> y <span class="sc">~</span> Vmax <span class="sc">*</span> x1 <span class="sc">*</span> x2 <span class="sc">*</span> x3 <span class="sc">/</span> ((K1<span class="sc">+</span>x1) <span class="sc">*</span> (K2<span class="sc">+</span>x2) <span class="sc">*</span> (K3<span class="sc">+</span>x3)),</span>
+<span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a>  <span class="at">parameters   =</span> <span class="fu">c</span>(<span class="st">&quot;Vmax&quot;</span>, <span class="st">&quot;K1&quot;</span>, <span class="st">&quot;K2&quot;</span>, <span class="st">&quot;K3&quot;</span>),</span>
+<span id="cb13-5"><a href="#cb13-5" tabindex="-1"></a>  <span class="at">par_values   =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span>),</span>
+<span id="cb13-6"><a href="#cb13-6" tabindex="-1"></a>  <span class="at">design_space =</span> <span class="fu">list</span>(<span class="at">x1 =</span> <span class="fu">c</span>(<span class="fl">0.1</span>, <span class="dv">10</span>), <span class="at">x2 =</span> <span class="fu">c</span>(<span class="fl">0.1</span>, <span class="dv">10</span>), <span class="at">x3 =</span> <span class="fu">c</span>(<span class="fl">0.1</span>, <span class="dv">10</span>))</span>
+<span id="cb13-7"><a href="#cb13-7" tabindex="-1"></a>)</span>
+<span id="cb13-8"><a href="#cb13-8" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb13-9"><a href="#cb13-9" tabindex="-1"></a>⠙ Calculating optimal design <span class="dv">6</span> <span class="fu">done</span> (<span class="fl">2.9</span><span class="sc">/</span>s) <span class="sc">|</span> <span class="fl">2.1</span>s</span>
+<span id="cb13-10"><a href="#cb13-10" tabindex="-1"></a></span>
+<span id="cb13-11"><a href="#cb13-11" tabindex="-1"></a>⠹ Calculating optimal design <span class="dv">7</span> <span class="fu">done</span> (<span class="dv">3</span><span class="sc">/</span>s) <span class="sc">|</span> <span class="fl">2.3</span>s  </span>
+<span id="cb13-12"><a href="#cb13-12" tabindex="-1"></a></span>
+<span id="cb13-13"><a href="#cb13-13" tabindex="-1"></a>⠸ Calculating optimal design <span class="dv">8</span> <span class="fu">done</span> (<span class="fl">3.1</span><span class="sc">/</span>s) <span class="sc">|</span> <span class="fl">2.6</span>s</span>
+<span id="cb13-14"><a href="#cb13-14" tabindex="-1"></a></span>
+<span id="cb13-15"><a href="#cb13-15" tabindex="-1"></a>⠼ Calculating optimal design <span class="dv">9</span> <span class="fu">done</span> (<span class="fl">3.1</span><span class="sc">/</span>s) <span class="sc">|</span> <span class="fl">2.9</span>s</span>
+<span id="cb13-16"><a href="#cb13-16" tabindex="-1"></a></span>
+<span id="cb13-17"><a href="#cb13-17" tabindex="-1"></a>⠴ Calculating optimal design <span class="dv">10</span> <span class="fu">done</span> (<span class="fl">3.2</span><span class="sc">/</span>s) <span class="sc">|</span> <span class="fl">3.2</span>s</span>
+<span id="cb13-18"><a href="#cb13-18" tabindex="-1"></a></span>
+<span id="cb13-19"><a href="#cb13-19" tabindex="-1"></a>⠦ Calculating optimal design <span class="dv">11</span> <span class="fu">done</span> (<span class="fl">3.2</span><span class="sc">/</span>s) <span class="sc">|</span> <span class="fl">3.4</span>s</span>
+<span id="cb13-20"><a href="#cb13-20" tabindex="-1"></a></span>
+<span id="cb13-21"><a href="#cb13-21" tabindex="-1"></a>⠧ Calculating optimal design <span class="dv">12</span> <span class="fu">done</span> (<span class="fl">3.2</span><span class="sc">/</span>s) <span class="sc">|</span> <span class="fl">3.7</span>s</span>
+<span id="cb13-22"><a href="#cb13-22" tabindex="-1"></a></span>
+<span id="cb13-23"><a href="#cb13-23" tabindex="-1"></a>⠇ Calculating optimal design <span class="dv">13</span> <span class="fu">done</span> (<span class="fl">3.3</span><span class="sc">/</span>s) <span class="sc">|</span> 4s  </span>
+<span id="cb13-24"><a href="#cb13-24" tabindex="-1"></a></span>
+<span id="cb13-25"><a href="#cb13-25" tabindex="-1"></a>⠏ Calculating optimal design <span class="dv">14</span> <span class="fu">done</span> (<span class="fl">3.3</span><span class="sc">/</span>s) <span class="sc">|</span> <span class="fl">4.3</span>s</span>
+<span id="cb13-26"><a href="#cb13-26" tabindex="-1"></a></span>
+<span id="cb13-27"><a href="#cb13-27" tabindex="-1"></a>⠋ Calculating optimal design <span class="dv">15</span> <span class="fu">done</span> (<span class="fl">3.3</span><span class="sc">/</span>s) <span class="sc">|</span> <span class="fl">4.6</span>s</span>
+<span id="cb13-28"><a href="#cb13-28" tabindex="-1"></a></span>
+<span id="cb13-29"><a href="#cb13-29" tabindex="-1"></a>⠙ Calculating optimal design <span class="dv">16</span> <span class="fu">done</span> (<span class="fl">3.3</span><span class="sc">/</span>s) <span class="sc">|</span> <span class="fl">4.9</span>s</span>
+<span id="cb13-30"><a href="#cb13-30" tabindex="-1"></a></span>
+<span id="cb13-31"><a href="#cb13-31" tabindex="-1"></a>⠹ Calculating optimal design <span class="dv">17</span> <span class="fu">done</span> (<span class="fl">3.3</span><span class="sc">/</span>s) <span class="sc">|</span> <span class="fl">5.2</span>s</span>
+<span id="cb13-32"><a href="#cb13-32" tabindex="-1"></a></span>
+<span id="cb13-33"><a href="#cb13-33" tabindex="-1"></a>⠸ Calculating optimal design <span class="dv">18</span> <span class="fu">done</span> (<span class="fl">3.3</span><span class="sc">/</span>s) <span class="sc">|</span> <span class="fl">5.4</span>s</span>
+<span id="cb13-34"><a href="#cb13-34" tabindex="-1"></a></span>
+<span id="cb13-35"><a href="#cb13-35" tabindex="-1"></a>⠼ Calculating optimal design <span class="dv">19</span> <span class="fu">done</span> (<span class="fl">3.3</span><span class="sc">/</span>s) <span class="sc">|</span> <span class="fl">5.7</span>s</span>
+<span id="cb13-36"><a href="#cb13-36" tabindex="-1"></a><span class="co">#&gt; ℹ Stop condition reached: difference between sensitivity and criterion &lt; 1e-05</span></span>
+<span id="cb13-37"><a href="#cb13-37" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb13-38"><a href="#cb13-38" tabindex="-1"></a>⠴ Calculating optimal design <span class="dv">20</span> <span class="fu">done</span> (<span class="fl">3.3</span><span class="sc">/</span>s) <span class="sc">|</span> 6s  </span>
+<span id="cb13-39"><a href="#cb13-39" tabindex="-1"></a>ℹ The lower bound <span class="cf">for</span> efficiency is <span class="fl">99.9990957865302</span>%</span>
+<span id="cb13-40"><a href="#cb13-40" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb13-41"><a href="#cb13-41" tabindex="-1"></a>                                                  </span>
+<span id="cb13-42"><a href="#cb13-42" tabindex="-1"></a>result_3D</span>
+<span id="cb13-43"><a href="#cb13-43" tabindex="-1"></a><span class="co">#&gt; Optimal design for D-Optimality (3 factors):</span></span>
+<span id="cb13-44"><a href="#cb13-44" tabindex="-1"></a><span class="co">#&gt;           x1         x2        x3    Weight</span></span>
+<span id="cb13-45"><a href="#cb13-45" tabindex="-1"></a><span class="co">#&gt; 1  0.8326969 10.0000000 10.000000 0.2499979</span></span>
+<span id="cb13-46"><a href="#cb13-46" tabindex="-1"></a><span class="co">#&gt; 2 10.0000000 10.0000000 10.000000 0.2499979</span></span>
+<span id="cb13-47"><a href="#cb13-47" tabindex="-1"></a><span class="co">#&gt; 3 10.0000000 10.0000000  0.834917 0.2500063</span></span>
+<span id="cb13-48"><a href="#cb13-48" tabindex="-1"></a><span class="co">#&gt; 4 10.0000000  0.8340851 10.000000 0.2499979</span></span>
+<span id="cb13-49"><a href="#cb13-49" tabindex="-1"></a><span class="fu">plot</span>(result_3D)</span></code></pre></div>
+<p><img src="data:image/png;base64,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" width="90%" /></p>
+</div>
+</div>
+<div id="compound-criterion" class="section level2">
+<h2>Compound criterion</h2>
+<p>Sometimes no single criterion captures the experimental goals.
+<code>criterion = &quot;Compound&quot;</code> combines any set of criteria as a
+weighted sum of their sensitivity functions. Weights are normalised
+automatically.</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a>result_DI <span class="ot">&lt;-</span> <span class="fu">opt_des</span>(</span>
+<span id="cb14-2"><a href="#cb14-2" tabindex="-1"></a>  <span class="at">criterion    =</span> <span class="st">&quot;Compound&quot;</span>,</span>
+<span id="cb14-3"><a href="#cb14-3" tabindex="-1"></a>  <span class="at">model        =</span> y <span class="sc">~</span> <span class="dv">10</span><span class="sc">^</span>(a <span class="sc">-</span> b <span class="sc">/</span> (c <span class="sc">+</span> x)),</span>
+<span id="cb14-4"><a href="#cb14-4" tabindex="-1"></a>  <span class="at">parameters   =</span> <span class="fu">c</span>(<span class="st">&quot;a&quot;</span>, <span class="st">&quot;b&quot;</span>, <span class="st">&quot;c&quot;</span>),</span>
+<span id="cb14-5"><a href="#cb14-5" tabindex="-1"></a>  <span class="at">par_values   =</span> <span class="fu">c</span>(<span class="fl">8.07131</span>, <span class="fl">1730.63</span>, <span class="fl">233.426</span>),</span>
+<span id="cb14-6"><a href="#cb14-6" tabindex="-1"></a>  <span class="at">design_space =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">100</span>),</span>
+<span id="cb14-7"><a href="#cb14-7" tabindex="-1"></a>  <span class="at">compound     =</span> <span class="fu">list</span>(</span>
+<span id="cb14-8"><a href="#cb14-8" tabindex="-1"></a>    <span class="fu">list</span>(<span class="at">criterion =</span> <span class="st">&quot;D-Optimality&quot;</span>, <span class="at">weight =</span> <span class="fl">0.7</span>),</span>
+<span id="cb14-9"><a href="#cb14-9" tabindex="-1"></a>    <span class="fu">list</span>(<span class="at">criterion =</span> <span class="st">&quot;I-Optimality&quot;</span>, <span class="at">weight =</span> <span class="fl">0.3</span>, <span class="at">reg_int =</span> <span class="fu">c</span>(<span class="dv">60</span>, <span class="dv">100</span>))</span>
+<span id="cb14-10"><a href="#cb14-10" tabindex="-1"></a>  )</span>
+<span id="cb14-11"><a href="#cb14-11" tabindex="-1"></a>)</span>
+<span id="cb14-12"><a href="#cb14-12" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb14-13"><a href="#cb14-13" tabindex="-1"></a><span class="co">#&gt; ℹ Stop condition not reached, max iterations performed</span></span>
+<span id="cb14-14"><a href="#cb14-14" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb14-15"><a href="#cb14-15" tabindex="-1"></a>⠙ Calculating optimal design <span class="dv">22</span> <span class="fu">done</span> (<span class="dv">12</span><span class="sc">/</span>s) <span class="sc">|</span> <span class="fl">1.8</span>s</span>
+<span id="cb14-16"><a href="#cb14-16" tabindex="-1"></a>ℹ The lower bound <span class="cf">for</span> efficiency is <span class="fl">99.9984745356004</span>%</span>
+<span id="cb14-17"><a href="#cb14-17" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb14-18"><a href="#cb14-18" tabindex="-1"></a>                                                   </span>
+<span id="cb14-19"><a href="#cb14-19" tabindex="-1"></a>result_DI</span>
+<span id="cb14-20"><a href="#cb14-20" tabindex="-1"></a><span class="co">#&gt; Optimal design for Compound (0.70*D + 0.30*I):</span></span>
+<span id="cb14-21"><a href="#cb14-21" tabindex="-1"></a><span class="co">#&gt;       Point    Weight</span></span>
+<span id="cb14-22"><a href="#cb14-22" tabindex="-1"></a><span class="co">#&gt; 1  46.50267 0.3047727</span></span>
+<span id="cb14-23"><a href="#cb14-23" tabindex="-1"></a><span class="co">#&gt; 2  82.87444 0.4062833</span></span>
+<span id="cb14-24"><a href="#cb14-24" tabindex="-1"></a><span class="co">#&gt; 3 100.00000 0.2889441</span></span></code></pre></div>
+<p>Comparing with the pure D-optimal design shows how the composite
+shifts one support point toward the prediction region:</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a>result_D_ant <span class="ot">&lt;-</span> <span class="fu">opt_des</span>(</span>
+<span id="cb15-2"><a href="#cb15-2" tabindex="-1"></a>  <span class="st">&quot;D-Optimality&quot;</span>,</span>
+<span id="cb15-3"><a href="#cb15-3" tabindex="-1"></a>  y <span class="sc">~</span> <span class="dv">10</span><span class="sc">^</span>(a <span class="sc">-</span> b <span class="sc">/</span> (c <span class="sc">+</span> x)), <span class="fu">c</span>(<span class="st">&quot;a&quot;</span>, <span class="st">&quot;b&quot;</span>, <span class="st">&quot;c&quot;</span>),</span>
+<span id="cb15-4"><a href="#cb15-4" tabindex="-1"></a>  <span class="fu">c</span>(<span class="fl">8.07131</span>, <span class="fl">1730.63</span>, <span class="fl">233.426</span>), <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">100</span>)</span>
+<span id="cb15-5"><a href="#cb15-5" tabindex="-1"></a>)</span>
+<span id="cb15-6"><a href="#cb15-6" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb15-7"><a href="#cb15-7" tabindex="-1"></a><span class="co">#&gt; ℹ Stop condition not reached, max iterations performed</span></span>
+<span id="cb15-8"><a href="#cb15-8" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb15-9"><a href="#cb15-9" tabindex="-1"></a>⠙ Calculating optimal design <span class="dv">22</span> <span class="fu">done</span> (<span class="dv">27</span><span class="sc">/</span>s) <span class="sc">|</span> 807ms</span>
+<span id="cb15-10"><a href="#cb15-10" tabindex="-1"></a>ℹ The lower bound <span class="cf">for</span> efficiency is <span class="fl">99.9986187558838</span>%</span>
+<span id="cb15-11"><a href="#cb15-11" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb15-12"><a href="#cb15-12" tabindex="-1"></a>                                                    </span>
+<span id="cb15-13"><a href="#cb15-13" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;D-optimal:</span><span class="sc">\n</span><span class="st">&quot;</span>);         <span class="fu">print</span>(result_D_ant<span class="sc">$</span>optdes)</span>
+<span id="cb15-14"><a href="#cb15-14" tabindex="-1"></a><span class="co">#&gt; D-optimal:</span></span>
+<span id="cb15-15"><a href="#cb15-15" tabindex="-1"></a><span class="co">#&gt;       Point    Weight</span></span>
+<span id="cb15-16"><a href="#cb15-16" tabindex="-1"></a><span class="co">#&gt; 1  44.90080 0.3333415</span></span>
+<span id="cb15-17"><a href="#cb15-17" tabindex="-1"></a><span class="co">#&gt; 2  83.19032 0.3333292</span></span>
+<span id="cb15-18"><a href="#cb15-18" tabindex="-1"></a><span class="co">#&gt; 3 100.00000 0.3333293</span></span>
+<span id="cb15-19"><a href="#cb15-19" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Compound D+I (70/30):</span><span class="sc">\n</span><span class="st">&quot;</span>); <span class="fu">print</span>(result_DI<span class="sc">$</span>optdes)</span>
+<span id="cb15-20"><a href="#cb15-20" tabindex="-1"></a><span class="co">#&gt; Compound D+I (70/30):</span></span>
+<span id="cb15-21"><a href="#cb15-21" tabindex="-1"></a><span class="co">#&gt;       Point    Weight</span></span>
+<span id="cb15-22"><a href="#cb15-22" tabindex="-1"></a><span class="co">#&gt; 1  46.50267 0.3047727</span></span>
+<span id="cb15-23"><a href="#cb15-23" tabindex="-1"></a><span class="co">#&gt; 2  82.87444 0.4062833</span></span>
+<span id="cb15-24"><a href="#cb15-24" tabindex="-1"></a><span class="co">#&gt; 3 100.00000 0.2889441</span></span></code></pre></div>
+</div>
+<div id="design-efficiency" class="section level2">
+<h2>Design efficiency</h2>
+<p><code>design_efficiency()</code> measures the fraction of the optimal
+information that a given design achieves: an efficiency of 0.80 means
+the design needs <span class="math inline">\(1/0.8 = 1.25\times\)</span>
+more observations to match the optimal.</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" tabindex="-1"></a>design_ad_hoc <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb16-2"><a href="#cb16-2" tabindex="-1"></a>  <span class="at">Point  =</span> <span class="fu">c</span>(<span class="dv">220</span>, <span class="dv">300</span>, <span class="dv">400</span>),</span>
+<span id="cb16-3"><a href="#cb16-3" tabindex="-1"></a>  <span class="at">Weight =</span> <span class="fu">c</span>(<span class="dv">1</span><span class="sc">/</span><span class="dv">3</span>, <span class="dv">1</span><span class="sc">/</span><span class="dv">3</span>, <span class="dv">1</span><span class="sc">/</span><span class="dv">3</span>)</span>
+<span id="cb16-4"><a href="#cb16-4" tabindex="-1"></a>)</span>
+<span id="cb16-5"><a href="#cb16-5" tabindex="-1"></a>eff <span class="ot">&lt;-</span> <span class="fu">design_efficiency</span>(design_ad_hoc, result_D)</span>
+<span id="cb16-6"><a href="#cb16-6" tabindex="-1"></a><span class="co">#&gt; ℹ The efficiency of the design is 47.3464225136928%</span></span>
+<span id="cb16-7"><a href="#cb16-7" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Efficiency of ad-hoc design:&quot;</span>, <span class="fu">round</span>(eff <span class="sc">*</span> <span class="dv">100</span>, <span class="dv">2</span>), <span class="st">&quot;%</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb16-8"><a href="#cb16-8" tabindex="-1"></a><span class="co">#&gt; Efficiency of ad-hoc design: 47.35 %</span></span></code></pre></div>
+<p>For multi-dimensional designs pass a data frame with one column per
+factor plus a <code>Weight</code> column:</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" tabindex="-1"></a>corners_2d <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb17-2"><a href="#cb17-2" tabindex="-1"></a>  <span class="at">x1     =</span> <span class="fu">c</span>(<span class="fl">0.1</span>, <span class="dv">10</span>,  <span class="fl">0.1</span>, <span class="dv">10</span>),</span>
+<span id="cb17-3"><a href="#cb17-3" tabindex="-1"></a>  <span class="at">x2     =</span> <span class="fu">c</span>(<span class="fl">0.1</span>, <span class="fl">0.1</span>, <span class="dv">10</span>,  <span class="dv">10</span>),</span>
+<span id="cb17-4"><a href="#cb17-4" tabindex="-1"></a>  <span class="at">Weight =</span> <span class="fu">rep</span>(<span class="fl">0.25</span>, <span class="dv">4</span>)</span>
+<span id="cb17-5"><a href="#cb17-5" tabindex="-1"></a>)</span>
+<span id="cb17-6"><a href="#cb17-6" tabindex="-1"></a>eff_2d <span class="ot">&lt;-</span> <span class="fu">design_efficiency</span>(corners_2d, result_2D)</span>
+<span id="cb17-7"><a href="#cb17-7" tabindex="-1"></a><span class="co">#&gt; ℹ The efficiency of the design is 19.3350707865126%</span></span>
+<span id="cb17-8"><a href="#cb17-8" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Efficiency of corner design vs 2D D-optimal:&quot;</span>, <span class="fu">round</span>(eff_2d <span class="sc">*</span> <span class="dv">100</span>, <span class="dv">2</span>), <span class="st">&quot;%</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb17-9"><a href="#cb17-9" tabindex="-1"></a><span class="co">#&gt; Efficiency of corner design vs 2D D-optimal: 19.34 %</span></span></code></pre></div>
+</div>
+<div id="rounding-to-exact-designs" class="section level2">
+<h2>Rounding to exact designs</h2>
+<p>Optimal designs assign continuous weights. Two functions convert them
+to integer replication counts for a given total <span class="math inline">\(n\)</span>.</p>
+<div id="efficient_round" class="section level3">
+<h3><code>efficient_round()</code></h3>
+<p>Uses the multiplier <span class="math inline">\(n - l/2\)</span>
+(where <span class="math inline">\(l\)</span> is the number of support
+points) and adjusts to guarantee the total is exactly <span class="math inline">\(n\)</span>:</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" tabindex="-1"></a>exact_design <span class="ot">&lt;-</span> <span class="fu">efficient_round</span>(result_D<span class="sc">$</span>optdes, <span class="at">n =</span> <span class="dv">20</span>)</span>
+<span id="cb18-2"><a href="#cb18-2" tabindex="-1"></a><span class="fu">print</span>(exact_design)</span>
+<span id="cb18-3"><a href="#cb18-3" tabindex="-1"></a><span class="co">#&gt;      Point Weight</span></span>
+<span id="cb18-4"><a href="#cb18-4" tabindex="-1"></a><span class="co">#&gt; 1 329.2963     10</span></span>
+<span id="cb18-5"><a href="#cb18-5" tabindex="-1"></a><span class="co">#&gt; 2 422.0000     10</span></span>
+<span id="cb18-6"><a href="#cb18-6" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Total observations:&quot;</span>, <span class="fu">sum</span>(exact_design<span class="sc">$</span>Weight), <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb18-7"><a href="#cb18-7" tabindex="-1"></a><span class="co">#&gt; Total observations: 20</span></span></code></pre></div>
+</div>
+<div id="combinatorial_round" class="section level3">
+<h3><code>combinatorial_round()</code></h3>
+<p>Exhaustive floor/ceiling search: optimal for small <span class="math inline">\(k\)</span> (number of support points) since it
+checks all <span class="math inline">\(2^k\)</span> combinations. Pass
+the <code>optdes</code> object so the function can use the criterion
+value for comparison:</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" tabindex="-1"></a>combo_design <span class="ot">&lt;-</span> <span class="fu">combinatorial_round</span>(result_D, <span class="at">n =</span> <span class="dv">10</span>)</span>
+<span id="cb19-2"><a href="#cb19-2" tabindex="-1"></a><span class="fu">print</span>(combo_design)</span>
+<span id="cb19-3"><a href="#cb19-3" tabindex="-1"></a><span class="co">#&gt;      Point Weight</span></span>
+<span id="cb19-4"><a href="#cb19-4" tabindex="-1"></a><span class="co">#&gt; 1 329.2963      5</span></span>
+<span id="cb19-5"><a href="#cb19-5" tabindex="-1"></a><span class="co">#&gt; 2 422.0000      5</span></span></code></pre></div>
+<p>Once rounded, compare the exact design’s efficiency against the
+approximate optimum:</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" tabindex="-1"></a>approx <span class="ot">&lt;-</span> exact_design</span>
+<span id="cb20-2"><a href="#cb20-2" tabindex="-1"></a>approx<span class="sc">$</span>Weight <span class="ot">&lt;-</span> approx<span class="sc">$</span>Weight <span class="sc">/</span> <span class="fu">sum</span>(approx<span class="sc">$</span>Weight)</span>
+<span id="cb20-3"><a href="#cb20-3" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Efficiency of rounded design:&quot;</span>, <span class="fu">round</span>(<span class="fu">design_efficiency</span>(approx, result_D) <span class="sc">*</span> <span class="dv">100</span>, <span class="dv">2</span>), <span class="st">&quot;%</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb20-4"><a href="#cb20-4" tabindex="-1"></a><span class="co">#&gt; ℹ The efficiency of the design is 100.000000015874%</span></span>
+<span id="cb20-5"><a href="#cb20-5" tabindex="-1"></a><span class="co">#&gt; Efficiency of rounded design: 100 %</span></span></code></pre></div>
+</div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

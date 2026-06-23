@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>KL-Optimality: designs for model discrimination</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">KL-Optimality: designs for model
+discrimination</h1>
+
+
+
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(optedr)</span></code></pre></div>
+<div id="background" class="section level2">
+<h2>Background</h2>
+<p>Standard optimality criteria (D, A, I, …) assume the model is
+correctly specified and aim to estimate its parameters as precisely as
+possible. KL-Optimality addresses a different question: <em>given two
+competing models, where should observations be taken to tell them apart
+most easily?</em></p>
+<p>The criterion is based on the Kullback-Leibler divergence between the
+reference model <span class="math inline">\(f_1\)</span> and the
+best-fitting version of the rival <span class="math inline">\(f_2\)</span>:</p>
+<p><span class="math display">\[\Phi_{\text{KL}}(\xi) = \int
+\min_{\beta_2} \text{KL}(f_1(y \mid x) \,\|\, f_2(y \mid x, \beta_2))\,
+\xi(dx).\]</span></p>
+<p>The design <span class="math inline">\(\xi^*\)</span> that maximises
+<span class="math inline">\(\Phi_{\text{KL}}\)</span> places
+observations where the two models are most distinguishable on
+average.</p>
+<p><strong>Reference:</strong> López-Fidalgo, Tommasi &amp; Trandafir
+(2007). <em>An optimal experimental design criterion for discriminating
+between non-normal models.</em> J. R. Stat. Soc. B, 69(2), 231–242.</p>
+</div>
+<div id="api-overview" class="section level2">
+<h2>API overview</h2>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="fu">opt_des</span>(</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>  <span class="st">&quot;KL-Optimality&quot;</span>,</span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>  <span class="at">model        =</span> <span class="sc">&lt;</span>reference model formula<span class="sc">&gt;</span>,</span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>  <span class="at">parameters   =</span> <span class="sc">&lt;</span>reference parameter names<span class="sc">&gt;</span>,</span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>  <span class="at">par_values   =</span> <span class="sc">&lt;</span>nominal values<span class="sc">&gt;</span>,</span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>  <span class="at">design_space =</span> <span class="sc">&lt;</span>scalar interval or named list<span class="sc">&gt;</span>,</span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>  <span class="co"># rival specification:</span></span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>  <span class="at">rival_model  =</span> <span class="sc">&lt;</span>rival formula<span class="sc">&gt;</span>,       <span class="co"># default: same as model</span></span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a>  <span class="at">rival_params =</span> <span class="sc">&lt;</span>rival param names<span class="sc">&gt;</span>,   <span class="co"># default: same as parameters</span></span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a>  <span class="at">rival_pars   =</span> <span class="sc">&lt;</span>starting values <span class="cf">for</span> internal optimisation<span class="sc">&gt;</span>,</span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a>  <span class="at">rival_lower  =</span> <span class="sc">&lt;</span>lower bounds <span class="cf">for</span> rival params<span class="sc">&gt;</span>,</span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a>  <span class="at">rival_upper  =</span> <span class="sc">&lt;</span>upper bounds <span class="cf">for</span> rival params<span class="sc">&gt;</span>,</span>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a>  <span class="co"># GLM family:</span></span>
+<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a>  <span class="at">family       =</span> <span class="st">&quot;Normal&quot;</span>,   <span class="co"># &quot;Poisson&quot;, &quot;Binomial&quot;, &quot;Gamma&quot;</span></span>
+<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a>  <span class="at">phi          =</span> <span class="dv">1</span>,          <span class="co"># dispersion parameter</span></span>
+<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a>  <span class="co"># alternative: supply a custom KL function</span></span>
+<span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a>  <span class="at">kl_fun       =</span> <span class="cn">NULL</span></span>
+<span id="cb2-18"><a href="#cb2-18" tabindex="-1"></a>)</span></code></pre></div>
+<p>The internal optimisation over rival parameters is done
+automatically. The optimal rival values are stored as a hidden attribute
+and shown by <code>summary()</code>.</p>
+</div>
+<div id="example-1-michaelis-menten-vs-linear-rival-normal-1d" class="section level2">
+<h2>Example 1: Michaelis-Menten vs linear rival (Normal, 1D)</h2>
+<p><strong>Context.</strong> Enzyme kinetics with one substrate. The
+reference model is Michaelis-Menten <span class="math inline">\(\mu(x) =
+V_{\max} x / (K_m + x)\)</span> with <span class="math inline">\(V_{\max} = 2\)</span>, <span class="math inline">\(K_m = 1\)</span>. The rival is a linear rate <span class="math inline">\(\mu(x) = a x\)</span>, valid only when <span class="math inline">\(x \ll K_m\)</span>. At high concentrations MM
+saturates while the linear model keeps growing — that is where the
+models diverge most.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>result_kl_mm <span class="ot">&lt;-</span> <span class="fu">opt_des</span>(</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>  <span class="st">&quot;KL-Optimality&quot;</span>,</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>  <span class="at">model        =</span> y <span class="sc">~</span> Vmax <span class="sc">*</span> x <span class="sc">/</span> (Km <span class="sc">+</span> x),</span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>  <span class="at">parameters   =</span> <span class="fu">c</span>(<span class="st">&quot;Vmax&quot;</span>, <span class="st">&quot;Km&quot;</span>),</span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>  <span class="at">par_values   =</span> <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">1</span>),</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>  <span class="at">design_space =</span> <span class="fu">c</span>(<span class="fl">0.1</span>, <span class="dv">5</span>),</span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>  <span class="at">rival_model  =</span> y <span class="sc">~</span> a <span class="sc">*</span> x,</span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>  <span class="at">rival_params =</span> <span class="fu">c</span>(<span class="st">&quot;a&quot;</span>),</span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>  <span class="at">rival_pars   =</span> <span class="fu">c</span>(<span class="dv">1</span>),</span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a>  <span class="at">rival_lower  =</span> <span class="fu">c</span>(<span class="fl">0.2</span>),</span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a>  <span class="at">rival_upper  =</span> <span class="fu">c</span>(<span class="fl">2.5</span>),</span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a>  <span class="at">family       =</span> <span class="st">&quot;Normal&quot;</span>,</span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a>  <span class="at">phi          =</span> <span class="dv">1</span></span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a>)</span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a><span class="co">#&gt; ℹ Stop condition reached: difference between sensitivity and criterion &lt; 1e-05</span></span>
+<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a>⠙ Calculating optimal design <span class="dv">7</span> <span class="fu">done</span> (<span class="dv">11</span><span class="sc">/</span>s) <span class="sc">|</span> 626ms</span>
+<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a>ℹ The lower bound <span class="cf">for</span> efficiency is <span class="fl">99.9957589718079</span>%</span>
+<span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-21"><a href="#cb3-21" tabindex="-1"></a>                                                   </span>
+<span id="cb3-22"><a href="#cb3-22" tabindex="-1"></a>result_kl_mm</span>
+<span id="cb3-23"><a href="#cb3-23" tabindex="-1"></a><span class="co">#&gt; Optimal design for KL-Optimality:</span></span>
+<span id="cb3-24"><a href="#cb3-24" tabindex="-1"></a><span class="co">#&gt;      Point    Weight</span></span>
+<span id="cb3-25"><a href="#cb3-25" tabindex="-1"></a><span class="co">#&gt; 1 1.127578 0.8159831</span></span>
+<span id="cb3-26"><a href="#cb3-26" tabindex="-1"></a><span class="co">#&gt; 2 5.000000 0.1840169</span></span></code></pre></div>
+<p><code>summary()</code> shows the GLM family and the optimal rival
+parameters found by the internal optimisation:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="fu">summary</span>(result_kl_mm)</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a><span class="co">#&gt; Model:</span></span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a><span class="co">#&gt; y ~ Vmax * x/(Km + x)</span></span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="co">#&gt; Weight function:</span></span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a><span class="co">#&gt; function (x) </span></span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a><span class="co">#&gt; 1 </span></span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a><span class="co">#&gt; GLM family: Normal  (phi = 1)</span></span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a><span class="co">#&gt; Optimal rival parameters: 0.445</span></span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a><span class="co">#&gt; Optimal design for KL-Optimality:</span></span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a><span class="co">#&gt;      Point    Weight</span></span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a><span class="co">#&gt; 1 1.127578 0.8159831</span></span>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a><span class="co">#&gt; 2 5.000000 0.1840169</span></span>
+<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a><span class="co">#&gt; Minimum efficiency (Atwood): 99.9957589718079%</span></span>
+<span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a><span class="co">#&gt; Criterion value:             0.155804</span></span></code></pre></div>
+<p>The sensitivity plot shows <span class="math inline">\(d_{\text{KL}}(x, \xi)\)</span> with the
+Equivalence Theorem bound (dashed). Support points concentrate in the
+saturation region where MM and the linear rival differ most:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="fu">plot</span>(result_kl_mm)</span></code></pre></div>
+<div class="figure">
+<img src="data:image/png;base64,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" alt="KL sensitivity function: MM vs linear rival." width="90%" />
+<p class="caption">
+KL sensitivity function: MM vs linear rival.
+</p>
+</div>
+<p>Efficiency of a five-point uniform design relative to the
+KL-optimal:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>design_unif <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>  <span class="at">Point  =</span> <span class="fu">c</span>(<span class="fl">0.1</span>, <span class="fl">1.3</span>, <span class="fl">2.5</span>, <span class="fl">3.8</span>, <span class="fl">5.0</span>),</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>  <span class="at">Weight =</span> <span class="fu">rep</span>(<span class="dv">1</span><span class="sc">/</span><span class="dv">5</span>, <span class="dv">5</span>)</span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>)</span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>eff_kl <span class="ot">&lt;-</span> <span class="fu">design_efficiency</span>(design_unif, result_kl_mm)</span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a><span class="co">#&gt; ℹ The efficiency of the design is 44.1071528869909%</span></span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Efficiency of uniform design:&quot;</span>, <span class="fu">round</span>(eff_kl <span class="sc">*</span> <span class="dv">100</span>, <span class="dv">2</span>), <span class="st">&quot;%</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a><span class="co">#&gt; Efficiency of uniform design: 44.11 %</span></span></code></pre></div>
+</div>
+<div id="example-2-exponential-decay-poisson-family" class="section level2">
+<h2>Example 2: exponential decay, Poisson family</h2>
+<p><strong>Context.</strong> A drug clearance study where the event
+count follows a Poisson process with rate <span class="math inline">\(\mu(x) = \exp(a - bx)\)</span>. The reference
+model has nominal decay rate <span class="math inline">\(b =
+0.5\)</span>. The rival represents a faster-elimination regime (<span class="math inline">\(b \in [0.8, 1.5]\)</span>), which could arise from
+drug interactions. The KL divergence for Poisson is <span class="math inline">\(\text{KL} = \mu_2 - \mu_1 - \mu_1
+\log(\mu_2/\mu_1)\)</span>; since the rival decays faster, the gap is
+largest at long follow-up times.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>result_kl_pois <span class="ot">&lt;-</span> <span class="fu">opt_des</span>(</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>  <span class="st">&quot;KL-Optimality&quot;</span>,</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>  <span class="at">model        =</span> y <span class="sc">~</span> <span class="fu">exp</span>(a <span class="sc">-</span> b <span class="sc">*</span> x),</span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>  <span class="at">parameters   =</span> <span class="fu">c</span>(<span class="st">&quot;a&quot;</span>, <span class="st">&quot;b&quot;</span>),</span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>  <span class="at">par_values   =</span> <span class="fu">c</span>(<span class="dv">2</span>, <span class="fl">0.5</span>),</span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>  <span class="at">design_space =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">4</span>),</span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a>  <span class="at">rival_pars   =</span> <span class="fu">c</span>(<span class="dv">2</span>, <span class="fl">1.0</span>),</span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a>  <span class="at">rival_lower  =</span> <span class="fu">c</span>(<span class="fl">1.5</span>, <span class="fl">0.8</span>),</span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a>  <span class="at">rival_upper  =</span> <span class="fu">c</span>(<span class="fl">2.5</span>, <span class="fl">1.5</span>),</span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a>  <span class="at">family       =</span> <span class="st">&quot;Poisson&quot;</span>,</span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a>  <span class="at">phi          =</span> <span class="dv">1</span></span>
+<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a>)</span>
+<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a><span class="co">#&gt; ℹ Stop condition reached: difference between sensitivity and criterion &lt; 1e-05</span></span>
+<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a>⠙ Calculating optimal design <span class="dv">4</span> <span class="fu">done</span> (<span class="fl">7.2</span><span class="sc">/</span>s) <span class="sc">|</span> 555ms</span>
+<span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a>ℹ The lower bound <span class="cf">for</span> efficiency is <span class="fl">99.9999938849073</span>%</span>
+<span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb7-19"><a href="#cb7-19" tabindex="-1"></a>                                                    </span>
+<span id="cb7-20"><a href="#cb7-20" tabindex="-1"></a>result_kl_pois</span>
+<span id="cb7-21"><a href="#cb7-21" tabindex="-1"></a><span class="co">#&gt; Optimal design for KL-Optimality:</span></span>
+<span id="cb7-22"><a href="#cb7-22" tabindex="-1"></a><span class="co">#&gt;   Point    Weight</span></span>
+<span id="cb7-23"><a href="#cb7-23" tabindex="-1"></a><span class="co">#&gt; 1     0 0.2012678</span></span>
+<span id="cb7-24"><a href="#cb7-24" tabindex="-1"></a><span class="co">#&gt; 2     4 0.7987322</span></span>
+<span id="cb7-25"><a href="#cb7-25" tabindex="-1"></a><span class="fu">summary</span>(result_kl_pois)</span>
+<span id="cb7-26"><a href="#cb7-26" tabindex="-1"></a><span class="co">#&gt; Model:</span></span>
+<span id="cb7-27"><a href="#cb7-27" tabindex="-1"></a><span class="co">#&gt; y ~ exp(a - b * x)</span></span>
+<span id="cb7-28"><a href="#cb7-28" tabindex="-1"></a><span class="co">#&gt; Weight function:</span></span>
+<span id="cb7-29"><a href="#cb7-29" tabindex="-1"></a><span class="co">#&gt; function (x) </span></span>
+<span id="cb7-30"><a href="#cb7-30" tabindex="-1"></a><span class="co">#&gt; 1 </span></span>
+<span id="cb7-31"><a href="#cb7-31" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb7-32"><a href="#cb7-32" tabindex="-1"></a><span class="co">#&gt; GLM family: Poisson  (phi = 1)</span></span>
+<span id="cb7-33"><a href="#cb7-33" tabindex="-1"></a><span class="co">#&gt; Optimal rival parameters: 2.2799, 0.8</span></span>
+<span id="cb7-34"><a href="#cb7-34" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb7-35"><a href="#cb7-35" tabindex="-1"></a><span class="co">#&gt; Optimal design for KL-Optimality:</span></span>
+<span id="cb7-36"><a href="#cb7-36" tabindex="-1"></a><span class="co">#&gt;   Point    Weight</span></span>
+<span id="cb7-37"><a href="#cb7-37" tabindex="-1"></a><span class="co">#&gt; 1     0 0.2012678</span></span>
+<span id="cb7-38"><a href="#cb7-38" tabindex="-1"></a><span class="co">#&gt; 2     4 0.7987322</span></span>
+<span id="cb7-39"><a href="#cb7-39" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb7-40"><a href="#cb7-40" tabindex="-1"></a><span class="co">#&gt; Minimum efficiency (Atwood): 99.9999938849073%</span></span>
+<span id="cb7-41"><a href="#cb7-41" tabindex="-1"></a><span class="co">#&gt; Criterion value:             0.318553</span></span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="fu">plot</span>(result_kl_pois)</span></code></pre></div>
+<div class="figure">
+<img src="data:image/png;base64,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" alt="KL sensitivity for Poisson decay model." width="90%" />
+<p class="caption">
+KL sensitivity for Poisson decay model.
+</p>
+</div>
+<p>The optimal rival parameters found internally confirm the closest
+rival within the constraint:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a>hv <span class="ot">&lt;-</span> <span class="fu">attr</span>(result_kl_pois, <span class="st">&quot;hidden_value&quot;</span>)</span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Optimal rival: a =&quot;</span>, <span class="fu">round</span>(hv<span class="sc">$</span>beta2_star[<span class="dv">1</span>], <span class="dv">3</span>),</span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a>    <span class="st">&quot; b =&quot;</span>, <span class="fu">round</span>(hv<span class="sc">$</span>beta2_star[<span class="dv">2</span>], <span class="dv">3</span>), <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a><span class="co">#&gt; Optimal rival: a = 2.28  b = 0.8</span></span></code></pre></div>
+</div>
+<div id="using-make_kl_fun-for-custom-kl-functions" class="section level2">
+<h2>Using <code>make_kl_fun()</code> for custom KL functions</h2>
+<p>For some discrimination problems the KL divergence does not reduce to
+the standard cumulant-generating-function form that
+<code>opt_des()</code> uses internally. <code>make_kl_fun()</code>
+automates the construction of the KL function from two model-family
+pairs.</p>
+<div id="supported-pairs" class="section level3">
+<h3>Supported pairs</h3>
+<table>
+<colgroup>
+<col width="59%" />
+<col width="40%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Combination</th>
+<th>Formula</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Same family, same <span class="math inline">\(\phi\)</span></td>
+<td>Standard cumulant form</td>
+</tr>
+<tr class="even">
+<td>Normal vs Normal, <span class="math inline">\(\phi_1 \neq
+\phi_2\)</span></td>
+<td><span class="math inline">\(\frac{1}{2}\left[\log\frac{\phi_2}{\phi_1} +
+\frac{\phi_1}{\phi_2} + \frac{(\mu_1-\mu_2)^2}{\phi_2} -
+1\right]\)</span></td>
+</tr>
+<tr class="odd">
+<td>Gamma vs Gamma, different shape</td>
+<td>Closed form with digamma/lgamma</td>
+</tr>
+</tbody>
+</table>
+<p>For other pairs, supply <code>kl_fun</code> directly as a function
+<code>(x, beta2) -&gt; scalar</code>.</p>
+</div>
+<div id="example-3-normal-with-different-variances-1d" class="section level3">
+<h3>Example 3: Normal with different variances (1D)</h3>
+<p><strong>Context.</strong> Same exponential decay model, but now the
+rival has variance <span class="math inline">\(\phi_2 = 4\)</span> (four
+times larger). The KL function includes a constant term <span class="math inline">\(\frac{1}{2}[\log(\phi_2/\phi_1) + \phi_1/\phi_2 -
+1]\)</span> even when the means coincide, so the design must also
+account for the variance difference.</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a>kl_fn_var <span class="ot">&lt;-</span> <span class="fu">make_kl_fun</span>(</span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>  <span class="st">&quot;Normal&quot;</span>,</span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a>  <span class="at">model1      =</span> y <span class="sc">~</span> a <span class="sc">*</span> <span class="fu">exp</span>(<span class="sc">-</span>b <span class="sc">*</span> x),</span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a>  <span class="at">params1     =</span> <span class="fu">c</span>(<span class="st">&quot;a&quot;</span>, <span class="st">&quot;b&quot;</span>),</span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a>  <span class="at">par_values1 =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="fl">0.5</span>),</span>
+<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a>  <span class="at">phi1        =</span> <span class="dv">1</span>,</span>
+<span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a>  <span class="at">family2     =</span> <span class="st">&quot;Normal&quot;</span>,</span>
+<span id="cb10-8"><a href="#cb10-8" tabindex="-1"></a>  <span class="at">model2      =</span> y <span class="sc">~</span> c <span class="sc">*</span> <span class="fu">exp</span>(<span class="sc">-</span>d <span class="sc">*</span> x),</span>
+<span id="cb10-9"><a href="#cb10-9" tabindex="-1"></a>  <span class="at">params2     =</span> <span class="fu">c</span>(<span class="st">&quot;c&quot;</span>, <span class="st">&quot;d&quot;</span>),</span>
+<span id="cb10-10"><a href="#cb10-10" tabindex="-1"></a>  <span class="at">phi2        =</span> <span class="dv">4</span></span>
+<span id="cb10-11"><a href="#cb10-11" tabindex="-1"></a>)</span>
+<span id="cb10-12"><a href="#cb10-12" tabindex="-1"></a></span>
+<span id="cb10-13"><a href="#cb10-13" tabindex="-1"></a>result_kl_var <span class="ot">&lt;-</span> <span class="fu">opt_des</span>(</span>
+<span id="cb10-14"><a href="#cb10-14" tabindex="-1"></a>  <span class="st">&quot;KL-Optimality&quot;</span>,</span>
+<span id="cb10-15"><a href="#cb10-15" tabindex="-1"></a>  <span class="at">model        =</span> y <span class="sc">~</span> a <span class="sc">*</span> <span class="fu">exp</span>(<span class="sc">-</span>b <span class="sc">*</span> x),</span>
+<span id="cb10-16"><a href="#cb10-16" tabindex="-1"></a>  <span class="at">parameters   =</span> <span class="fu">c</span>(<span class="st">&quot;a&quot;</span>, <span class="st">&quot;b&quot;</span>),</span>
+<span id="cb10-17"><a href="#cb10-17" tabindex="-1"></a>  <span class="at">par_values   =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="fl">0.5</span>),</span>
+<span id="cb10-18"><a href="#cb10-18" tabindex="-1"></a>  <span class="at">design_space =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">4</span>),</span>
+<span id="cb10-19"><a href="#cb10-19" tabindex="-1"></a>  <span class="at">kl_fun       =</span> kl_fn_var,</span>
+<span id="cb10-20"><a href="#cb10-20" tabindex="-1"></a>  <span class="at">rival_pars   =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="fl">1.0</span>),</span>
+<span id="cb10-21"><a href="#cb10-21" tabindex="-1"></a>  <span class="at">rival_lower  =</span> <span class="fu">c</span>(<span class="fl">0.5</span>, <span class="fl">0.8</span>),</span>
+<span id="cb10-22"><a href="#cb10-22" tabindex="-1"></a>  <span class="at">rival_upper  =</span> <span class="fu">c</span>(<span class="fl">2.0</span>, <span class="fl">1.5</span>)</span>
+<span id="cb10-23"><a href="#cb10-23" tabindex="-1"></a>)</span>
+<span id="cb10-24"><a href="#cb10-24" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb10-25"><a href="#cb10-25" tabindex="-1"></a>⠙ Calculating optimal design <span class="dv">10</span> <span class="fu">done</span> (<span class="fl">4.9</span><span class="sc">/</span>s) <span class="sc">|</span> <span class="fl">2.1</span>s</span>
+<span id="cb10-26"><a href="#cb10-26" tabindex="-1"></a></span>
+<span id="cb10-27"><a href="#cb10-27" tabindex="-1"></a>⠹ Calculating optimal design <span class="dv">11</span> <span class="fu">done</span> (<span class="fl">4.8</span><span class="sc">/</span>s) <span class="sc">|</span> <span class="fl">2.3</span>s</span>
+<span id="cb10-28"><a href="#cb10-28" tabindex="-1"></a></span>
+<span id="cb10-29"><a href="#cb10-29" tabindex="-1"></a>⠸ Calculating optimal design <span class="dv">12</span> <span class="fu">done</span> (<span class="fl">4.7</span><span class="sc">/</span>s) <span class="sc">|</span> <span class="fl">2.6</span>s</span>
+<span id="cb10-30"><a href="#cb10-30" tabindex="-1"></a></span>
+<span id="cb10-31"><a href="#cb10-31" tabindex="-1"></a>⠼ Calculating optimal design <span class="dv">13</span> <span class="fu">done</span> (<span class="fl">4.6</span><span class="sc">/</span>s) <span class="sc">|</span> <span class="fl">2.8</span>s</span>
+<span id="cb10-32"><a href="#cb10-32" tabindex="-1"></a></span>
+<span id="cb10-33"><a href="#cb10-33" tabindex="-1"></a>⠴ Calculating optimal design <span class="dv">14</span> <span class="fu">done</span> (<span class="fl">4.6</span><span class="sc">/</span>s) <span class="sc">|</span> <span class="fl">3.1</span>s</span>
+<span id="cb10-34"><a href="#cb10-34" tabindex="-1"></a></span>
+<span id="cb10-35"><a href="#cb10-35" tabindex="-1"></a>⠦ Calculating optimal design <span class="dv">15</span> <span class="fu">done</span> (<span class="fl">4.6</span><span class="sc">/</span>s) <span class="sc">|</span> <span class="fl">3.3</span>s</span>
+<span id="cb10-36"><a href="#cb10-36" tabindex="-1"></a></span>
+<span id="cb10-37"><a href="#cb10-37" tabindex="-1"></a>⠧ Calculating optimal design <span class="dv">16</span> <span class="fu">done</span> (<span class="fl">4.6</span><span class="sc">/</span>s) <span class="sc">|</span> <span class="fl">3.5</span>s</span>
+<span id="cb10-38"><a href="#cb10-38" tabindex="-1"></a></span>
+<span id="cb10-39"><a href="#cb10-39" tabindex="-1"></a>⠇ Calculating optimal design <span class="dv">17</span> <span class="fu">done</span> (<span class="fl">4.6</span><span class="sc">/</span>s) <span class="sc">|</span> <span class="fl">3.7</span>s</span>
+<span id="cb10-40"><a href="#cb10-40" tabindex="-1"></a></span>
+<span id="cb10-41"><a href="#cb10-41" tabindex="-1"></a>⠏ Calculating optimal design <span class="dv">18</span> <span class="fu">done</span> (<span class="fl">4.7</span><span class="sc">/</span>s) <span class="sc">|</span> <span class="fl">3.9</span>s</span>
+<span id="cb10-42"><a href="#cb10-42" tabindex="-1"></a></span>
+<span id="cb10-43"><a href="#cb10-43" tabindex="-1"></a>⠋ Calculating optimal design <span class="dv">19</span> <span class="fu">done</span> (<span class="fl">4.6</span><span class="sc">/</span>s) <span class="sc">|</span> <span class="fl">4.2</span>s</span>
+<span id="cb10-44"><a href="#cb10-44" tabindex="-1"></a></span>
+<span id="cb10-45"><a href="#cb10-45" tabindex="-1"></a>⠙ Calculating optimal design <span class="dv">20</span> <span class="fu">done</span> (<span class="fl">4.6</span><span class="sc">/</span>s) <span class="sc">|</span> <span class="fl">4.4</span>s</span>
+<span id="cb10-46"><a href="#cb10-46" tabindex="-1"></a></span>
+<span id="cb10-47"><a href="#cb10-47" tabindex="-1"></a>⠹ Calculating optimal design <span class="dv">21</span> <span class="fu">done</span> (<span class="fl">4.6</span><span class="sc">/</span>s) <span class="sc">|</span> <span class="fl">4.5</span>s</span>
+<span id="cb10-48"><a href="#cb10-48" tabindex="-1"></a><span class="co">#&gt; ℹ Stop condition not reached, max iterations performed</span></span>
+<span id="cb10-49"><a href="#cb10-49" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb10-50"><a href="#cb10-50" tabindex="-1"></a>⠸ Calculating optimal design <span class="dv">22</span> <span class="fu">done</span> (<span class="fl">4.7</span><span class="sc">/</span>s) <span class="sc">|</span> <span class="fl">4.7</span>s</span>
+<span id="cb10-51"><a href="#cb10-51" tabindex="-1"></a>ℹ The lower bound <span class="cf">for</span> efficiency is <span class="fl">99.9671378206639</span>%</span>
+<span id="cb10-52"><a href="#cb10-52" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb10-53"><a href="#cb10-53" tabindex="-1"></a>                                                    </span>
+<span id="cb10-54"><a href="#cb10-54" tabindex="-1"></a>result_kl_var</span>
+<span id="cb10-55"><a href="#cb10-55" tabindex="-1"></a><span class="co">#&gt; Optimal design for KL-Optimality:</span></span>
+<span id="cb10-56"><a href="#cb10-56" tabindex="-1"></a><span class="co">#&gt;      Point     Weight</span></span>
+<span id="cb10-57"><a href="#cb10-57" tabindex="-1"></a><span class="co">#&gt; 1 0.000000 0.16826906</span></span>
+<span id="cb10-58"><a href="#cb10-58" tabindex="-1"></a><span class="co">#&gt; 2 1.333333 0.07912872</span></span>
+<span id="cb10-59"><a href="#cb10-59" tabindex="-1"></a><span class="co">#&gt; 3 1.989481 0.61240029</span></span>
+<span id="cb10-60"><a href="#cb10-60" tabindex="-1"></a><span class="co">#&gt; 4 2.666667 0.14020193</span></span>
+<span id="cb10-61"><a href="#cb10-61" tabindex="-1"></a><span class="fu">summary</span>(result_kl_var)</span>
+<span id="cb10-62"><a href="#cb10-62" tabindex="-1"></a><span class="co">#&gt; Model:</span></span>
+<span id="cb10-63"><a href="#cb10-63" tabindex="-1"></a><span class="co">#&gt; y ~ a * exp(-b * x)</span></span>
+<span id="cb10-64"><a href="#cb10-64" tabindex="-1"></a><span class="co">#&gt; Weight function:</span></span>
+<span id="cb10-65"><a href="#cb10-65" tabindex="-1"></a><span class="co">#&gt; function (x) </span></span>
+<span id="cb10-66"><a href="#cb10-66" tabindex="-1"></a><span class="co">#&gt; 1 </span></span>
+<span id="cb10-67"><a href="#cb10-67" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb10-68"><a href="#cb10-68" tabindex="-1"></a><span class="co">#&gt; KL function: user-supplied</span></span>
+<span id="cb10-69"><a href="#cb10-69" tabindex="-1"></a><span class="co">#&gt; Optimal rival parameters: 1.1353, 0.8</span></span>
+<span id="cb10-70"><a href="#cb10-70" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb10-71"><a href="#cb10-71" tabindex="-1"></a><span class="co">#&gt; Optimal design for KL-Optimality:</span></span>
+<span id="cb10-72"><a href="#cb10-72" tabindex="-1"></a><span class="co">#&gt;      Point     Weight</span></span>
+<span id="cb10-73"><a href="#cb10-73" tabindex="-1"></a><span class="co">#&gt; 1 0.000000 0.16826906</span></span>
+<span id="cb10-74"><a href="#cb10-74" tabindex="-1"></a><span class="co">#&gt; 2 1.333333 0.07912872</span></span>
+<span id="cb10-75"><a href="#cb10-75" tabindex="-1"></a><span class="co">#&gt; 3 1.989481 0.61240029</span></span>
+<span id="cb10-76"><a href="#cb10-76" tabindex="-1"></a><span class="co">#&gt; 4 2.666667 0.14020193</span></span>
+<span id="cb10-77"><a href="#cb10-77" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb10-78"><a href="#cb10-78" tabindex="-1"></a><span class="co">#&gt; Minimum efficiency (Atwood): 99.9671378206639%</span></span>
+<span id="cb10-79"><a href="#cb10-79" tabindex="-1"></a><span class="co">#&gt; Criterion value:             0.320445</span></span></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="fu">plot</span>(result_kl_var)</span></code></pre></div>
+<div class="figure">
+<img src="data:image/png;base64,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" alt="KL sensitivity: Normal phi=1 vs Normal phi=4." width="90%" />
+<p class="caption">
+KL sensitivity: Normal phi=1 vs Normal phi=4.
+</p>
+</div>
+</div>
+<div id="example-4-two-factor-mm-vs-linear-rival-make_kl_fun-2d" class="section level3">
+<h3>Example 4: two-factor MM vs linear rival (<code>make_kl_fun</code>,
+2D)</h3>
+<p><code>make_kl_fun()</code> works with models that use different
+subsets of the design variables. Here the reference uses <span class="math inline">\((x_1, x_2)\)</span> (bisubstrate MM) while the
+rival depends only on <span class="math inline">\(x_1\)</span>
+(single-substrate linear approximation):</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a>kl_fn_2d <span class="ot">&lt;-</span> <span class="fu">make_kl_fun</span>(</span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a>  <span class="st">&quot;Normal&quot;</span>,</span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a>  <span class="at">model1      =</span> y <span class="sc">~</span> Vmax <span class="sc">*</span> x1 <span class="sc">*</span> x2 <span class="sc">/</span> ((Km1 <span class="sc">+</span> x1) <span class="sc">*</span> (Km2 <span class="sc">+</span> x2)),</span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a>  <span class="at">params1     =</span> <span class="fu">c</span>(<span class="st">&quot;Vmax&quot;</span>, <span class="st">&quot;Km1&quot;</span>, <span class="st">&quot;Km2&quot;</span>),</span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a>  <span class="at">par_values1 =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span>),</span>
+<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a>  <span class="at">model2      =</span> y <span class="sc">~</span> alpha <span class="sc">*</span> x1,</span>
+<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a>  <span class="at">params2     =</span> <span class="st">&quot;alpha&quot;</span></span>
+<span id="cb12-8"><a href="#cb12-8" tabindex="-1"></a>)</span>
+<span id="cb12-9"><a href="#cb12-9" tabindex="-1"></a></span>
+<span id="cb12-10"><a href="#cb12-10" tabindex="-1"></a>result_kl_2d <span class="ot">&lt;-</span> <span class="fu">opt_des</span>(</span>
+<span id="cb12-11"><a href="#cb12-11" tabindex="-1"></a>  <span class="st">&quot;KL-Optimality&quot;</span>,</span>
+<span id="cb12-12"><a href="#cb12-12" tabindex="-1"></a>  <span class="at">model        =</span> y <span class="sc">~</span> Vmax <span class="sc">*</span> x1 <span class="sc">*</span> x2 <span class="sc">/</span> ((Km1 <span class="sc">+</span> x1) <span class="sc">*</span> (Km2 <span class="sc">+</span> x2)),</span>
+<span id="cb12-13"><a href="#cb12-13" tabindex="-1"></a>  <span class="at">parameters   =</span> <span class="fu">c</span>(<span class="st">&quot;Vmax&quot;</span>, <span class="st">&quot;Km1&quot;</span>, <span class="st">&quot;Km2&quot;</span>),</span>
+<span id="cb12-14"><a href="#cb12-14" tabindex="-1"></a>  <span class="at">par_values   =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span>),</span>
+<span id="cb12-15"><a href="#cb12-15" tabindex="-1"></a>  <span class="at">design_space =</span> <span class="fu">list</span>(<span class="at">x1 =</span> <span class="fu">c</span>(<span class="fl">0.1</span>, <span class="dv">5</span>), <span class="at">x2 =</span> <span class="fu">c</span>(<span class="fl">0.1</span>, <span class="dv">5</span>)),</span>
+<span id="cb12-16"><a href="#cb12-16" tabindex="-1"></a>  <span class="at">kl_fun       =</span> kl_fn_2d,</span>
+<span id="cb12-17"><a href="#cb12-17" tabindex="-1"></a>  <span class="at">rival_pars   =</span> <span class="fu">c</span>(<span class="fl">0.5</span>),</span>
+<span id="cb12-18"><a href="#cb12-18" tabindex="-1"></a>  <span class="at">rival_lower  =</span> <span class="fu">c</span>(<span class="fl">0.05</span>),</span>
+<span id="cb12-19"><a href="#cb12-19" tabindex="-1"></a>  <span class="at">rival_upper  =</span> <span class="fu">c</span>(<span class="fl">2.0</span>)</span>
+<span id="cb12-20"><a href="#cb12-20" tabindex="-1"></a>)</span>
+<span id="cb12-21"><a href="#cb12-21" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb12-22"><a href="#cb12-22" tabindex="-1"></a>⠙ Calculating optimal design <span class="dv">3</span> <span class="fu">done</span> (<span class="fl">1.3</span><span class="sc">/</span>s) <span class="sc">|</span> <span class="fl">2.3</span>s</span>
+<span id="cb12-23"><a href="#cb12-23" tabindex="-1"></a><span class="co">#&gt; ℹ Stop condition reached: difference between sensitivity and criterion &lt; 1e-05</span></span>
+<span id="cb12-24"><a href="#cb12-24" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb12-25"><a href="#cb12-25" tabindex="-1"></a>⠹ Calculating optimal design <span class="dv">6</span> <span class="fu">done</span> (<span class="fl">2.4</span><span class="sc">/</span>s) <span class="sc">|</span> <span class="fl">2.5</span>s</span>
+<span id="cb12-26"><a href="#cb12-26" tabindex="-1"></a>ℹ The lower bound <span class="cf">for</span> efficiency is <span class="fl">99.991707653218</span>%</span>
+<span id="cb12-27"><a href="#cb12-27" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb12-28"><a href="#cb12-28" tabindex="-1"></a>                                                   </span>
+<span id="cb12-29"><a href="#cb12-29" tabindex="-1"></a>result_kl_2d</span>
+<span id="cb12-30"><a href="#cb12-30" tabindex="-1"></a><span class="co">#&gt; Optimal design for KL-Optimality (2 factors):</span></span>
+<span id="cb12-31"><a href="#cb12-31" tabindex="-1"></a><span class="co">#&gt;         x1  x2    Weight</span></span>
+<span id="cb12-32"><a href="#cb12-32" tabindex="-1"></a><span class="co">#&gt; 1 2.062645 5.0 0.7079501</span></span>
+<span id="cb12-33"><a href="#cb12-33" tabindex="-1"></a><span class="co">#&gt; 2 5.000000 0.1 0.2920499</span></span></code></pre></div>
+<p>The heatmap concentrates support where the difference between the
+bisubstrate hyperbola and the linear rival is greatest (saturation
+regime in both <span class="math inline">\(x_1\)</span> and <span class="math inline">\(x_2\)</span>):</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a><span class="fu">plot</span>(result_kl_2d)</span></code></pre></div>
+<div class="figure">
+<img src="data:image/png;base64,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" alt="KL sensitivity heatmap: 2D MM vs linear rival." width="90%" />
+<p class="caption">
+KL sensitivity heatmap: 2D MM vs linear rival.
+</p>
+</div>
+</div>
+</div>
+<div id="example-5-discriminating-error-structures-the-hill-model" class="section level2">
+<h2>Example 5: discriminating error structures — the Hill model</h2>
+<p><strong>Reference:</strong> De la Calle-Arroyo, Leorato,
+Rodríguez-Aragón &amp; Tommasi (2025). <em>Augmented designs to choose
+between constant absolute and relative errors.</em> Chemometrics and
+Intelligent Laboratory Systems, <a href="doi:10.1016/j.chemolab.2025.105374" class="uri">doi:10.1016/j.chemolab.2025.105374</a>.</p>
+<p><strong>Context.</strong> Dose-response experiments with the Hill
+(4-parameter Emax) model:</p>
+<p><span class="math display">\[\eta(x, \beta) = (E_{\text{con}} - b)
+\cdot \frac{(x/\text{IC}_{50})^s}{1 + (x/\text{IC}_{50})^s} +
+b\]</span></p>
+<p>with <span class="math inline">\(E_{\text{con}} = 1.70\)</span>,
+<span class="math inline">\(b = 0.137\)</span>, <span class="math inline">\(\text{IC}_{50} = 111\)</span>, <span class="math inline">\(s = -1.03\)</span> and <span class="math inline">\(x \in [0.01, 1500]\)</span> nM. Two error
+structures are competing:</p>
+<ul>
+<li><strong>Relative error</strong> (reference): <span class="math inline">\(\varepsilon \sim N(0,\, \sigma_{\text{rel}}^2
+\cdot \eta^2)\)</span></li>
+<li><strong>Absolute error</strong> (rival): <span class="math inline">\(\varepsilon \sim N(0,\,
+\sigma_{\text{abs}}^2)\)</span></li>
+</ul>
+<p>The KL divergence minimised over the rival variance <span class="math inline">\(\sigma_{\text{abs}}^2\)</span> is</p>
+<p><span class="math display">\[\text{KL}(x,\, \sigma_{\text{abs}}^2) =
+\frac{1}{2}\!\left(\frac{\eta^2(x)}{\sigma_{\text{abs}}^2} - 1 +
+\log\frac{\sigma_{\text{abs}}^2}{\eta^2(x)}\right).\]</span></p>
+<p>We supply this directly as <code>kl_fun</code> since it is not
+covered by the standard Normal-vs-Normal formula (the reference variance
+is <span class="math inline">\(x\)</span>-dependent):</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a>kl_fun_hill <span class="ot">&lt;-</span> <span class="cf">function</span>(x, beta2) {</span>
+<span id="cb14-2"><a href="#cb14-2" tabindex="-1"></a>  sigma_sq <span class="ot">&lt;-</span> beta2[<span class="dv">1</span>]</span>
+<span id="cb14-3"><a href="#cb14-3" tabindex="-1"></a>  eta <span class="ot">&lt;-</span> (<span class="fl">1.70</span> <span class="sc">-</span> <span class="fl">0.137</span>) <span class="sc">*</span> (x <span class="sc">/</span> <span class="dv">111</span>)<span class="sc">^</span>(<span class="sc">-</span><span class="fl">1.03</span>) <span class="sc">/</span> (<span class="dv">1</span> <span class="sc">+</span> (x <span class="sc">/</span> <span class="dv">111</span>)<span class="sc">^</span>(<span class="sc">-</span><span class="fl">1.03</span>)) <span class="sc">+</span> <span class="fl">0.137</span></span>
+<span id="cb14-4"><a href="#cb14-4" tabindex="-1"></a>  <span class="fl">0.5</span> <span class="sc">*</span> (eta<span class="sc">^</span><span class="dv">2</span> <span class="sc">/</span> sigma_sq <span class="sc">-</span> <span class="dv">1</span> <span class="sc">+</span> <span class="fu">log</span>(sigma_sq <span class="sc">/</span> eta<span class="sc">^</span><span class="dv">2</span>))</span>
+<span id="cb14-5"><a href="#cb14-5" tabindex="-1"></a>}</span>
+<span id="cb14-6"><a href="#cb14-6" tabindex="-1"></a></span>
+<span id="cb14-7"><a href="#cb14-7" tabindex="-1"></a>result_kl_hill <span class="ot">&lt;-</span> <span class="fu">opt_des</span>(</span>
+<span id="cb14-8"><a href="#cb14-8" tabindex="-1"></a>  <span class="st">&quot;KL-Optimality&quot;</span>,</span>
+<span id="cb14-9"><a href="#cb14-9" tabindex="-1"></a>  <span class="at">model        =</span> y <span class="sc">~</span> (Econ <span class="sc">-</span> b) <span class="sc">*</span> (x <span class="sc">/</span> IC50)<span class="sc">^</span>s <span class="sc">/</span> (<span class="dv">1</span> <span class="sc">+</span> (x <span class="sc">/</span> IC50)<span class="sc">^</span>s) <span class="sc">+</span> b,</span>
+<span id="cb14-10"><a href="#cb14-10" tabindex="-1"></a>  <span class="at">parameters   =</span> <span class="fu">c</span>(<span class="st">&quot;Econ&quot;</span>, <span class="st">&quot;b&quot;</span>, <span class="st">&quot;IC50&quot;</span>, <span class="st">&quot;s&quot;</span>),</span>
+<span id="cb14-11"><a href="#cb14-11" tabindex="-1"></a>  <span class="at">par_values   =</span> <span class="fu">c</span>(<span class="fl">1.70</span>, <span class="fl">0.137</span>, <span class="dv">111</span>, <span class="sc">-</span><span class="fl">1.03</span>),</span>
+<span id="cb14-12"><a href="#cb14-12" tabindex="-1"></a>  <span class="at">design_space =</span> <span class="fu">c</span>(<span class="fl">0.01</span>, <span class="dv">1500</span>),</span>
+<span id="cb14-13"><a href="#cb14-13" tabindex="-1"></a>  <span class="at">kl_fun       =</span> kl_fun_hill,</span>
+<span id="cb14-14"><a href="#cb14-14" tabindex="-1"></a>  <span class="at">rival_pars   =</span> <span class="fu">c</span>(<span class="fl">1.0</span>),</span>
+<span id="cb14-15"><a href="#cb14-15" tabindex="-1"></a>  <span class="at">rival_lower  =</span> <span class="fu">c</span>(<span class="fl">1e-4</span>),</span>
+<span id="cb14-16"><a href="#cb14-16" tabindex="-1"></a>  <span class="at">rival_upper  =</span> <span class="fu">c</span>(<span class="fl">1e6</span>)</span>
+<span id="cb14-17"><a href="#cb14-17" tabindex="-1"></a>)</span>
+<span id="cb14-18"><a href="#cb14-18" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb14-19"><a href="#cb14-19" tabindex="-1"></a><span class="co">#&gt; ℹ Stop condition reached: difference between sensitivity and criterion &lt; 1e-05</span></span>
+<span id="cb14-20"><a href="#cb14-20" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb14-21"><a href="#cb14-21" tabindex="-1"></a>⠙ Calculating optimal design <span class="dv">5</span> <span class="fu">done</span> (<span class="dv">40</span><span class="sc">/</span>s) <span class="sc">|</span> 127ms</span>
+<span id="cb14-22"><a href="#cb14-22" tabindex="-1"></a>ℹ The lower bound <span class="cf">for</span> efficiency is <span class="fl">99.9997190548208</span>%</span>
+<span id="cb14-23"><a href="#cb14-23" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb14-24"><a href="#cb14-24" tabindex="-1"></a>                                                   </span>
+<span id="cb14-25"><a href="#cb14-25" tabindex="-1"></a>result_kl_hill</span>
+<span id="cb14-26"><a href="#cb14-26" tabindex="-1"></a><span class="co">#&gt; Optimal design for KL-Optimality:</span></span>
+<span id="cb14-27"><a href="#cb14-27" tabindex="-1"></a><span class="co">#&gt;     Point   Weight</span></span>
+<span id="cb14-28"><a href="#cb14-28" tabindex="-1"></a><span class="co">#&gt; 1    0.01 0.233994</span></span>
+<span id="cb14-29"><a href="#cb14-29" tabindex="-1"></a><span class="co">#&gt; 2 1500.00 0.766006</span></span>
+<span id="cb14-30"><a href="#cb14-30" tabindex="-1"></a><span class="fu">summary</span>(result_kl_hill)</span>
+<span id="cb14-31"><a href="#cb14-31" tabindex="-1"></a><span class="co">#&gt; Model:</span></span>
+<span id="cb14-32"><a href="#cb14-32" tabindex="-1"></a><span class="co">#&gt; y ~ (Econ - b) * (x/IC50)^s/(1 + (x/IC50)^s) + b</span></span>
+<span id="cb14-33"><a href="#cb14-33" tabindex="-1"></a><span class="co">#&gt; Weight function:</span></span>
+<span id="cb14-34"><a href="#cb14-34" tabindex="-1"></a><span class="co">#&gt; function (x) </span></span>
+<span id="cb14-35"><a href="#cb14-35" tabindex="-1"></a><span class="co">#&gt; 1 </span></span>
+<span id="cb14-36"><a href="#cb14-36" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb14-37"><a href="#cb14-37" tabindex="-1"></a><span class="co">#&gt; KL function: user-supplied</span></span>
+<span id="cb14-38"><a href="#cb14-38" tabindex="-1"></a><span class="co">#&gt; Optimal rival parameters: 0.7192</span></span>
+<span id="cb14-39"><a href="#cb14-39" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb14-40"><a href="#cb14-40" tabindex="-1"></a><span class="co">#&gt; Optimal design for KL-Optimality:</span></span>
+<span id="cb14-41"><a href="#cb14-41" tabindex="-1"></a><span class="co">#&gt;     Point   Weight</span></span>
+<span id="cb14-42"><a href="#cb14-42" tabindex="-1"></a><span class="co">#&gt; 1    0.01 0.233994</span></span>
+<span id="cb14-43"><a href="#cb14-43" tabindex="-1"></a><span class="co">#&gt; 2 1500.00 0.766006</span></span>
+<span id="cb14-44"><a href="#cb14-44" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb14-45"><a href="#cb14-45" tabindex="-1"></a><span class="co">#&gt; Minimum efficiency (Atwood): 99.9997190548208%</span></span>
+<span id="cb14-46"><a href="#cb14-46" tabindex="-1"></a><span class="co">#&gt; Criterion value:             0.813492</span></span></code></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a><span class="fu">plot</span>(result_kl_hill)</span></code></pre></div>
+<div class="figure">
+<img src="data:image/png;base64,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" alt="KL sensitivity for the Hill model (error structure discrimination)." width="90%" />
+<p class="caption">
+KL sensitivity for the Hill model (error structure discrimination).
+</p>
+</div>
+<p>The KL-optimal design places all weight at the two extremes of the
+design space. This matches the result reported in the paper (support at
+<span class="math inline">\(x = 0.01\)</span> with weight 0.23 and <span class="math inline">\(x = 1500\)</span> with weight 0.77). The Atwood
+criterion at 100 % confirms the design is exactly optimal.</p>
+<p>The optimal rival variance recovered internally:</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" tabindex="-1"></a>hv_hill <span class="ot">&lt;-</span> <span class="fu">attr</span>(result_kl_hill, <span class="st">&quot;hidden_value&quot;</span>)</span>
+<span id="cb16-2"><a href="#cb16-2" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Optimal rival sigma_abs^2 =&quot;</span>, <span class="fu">round</span>(hv_hill<span class="sc">$</span>beta2_star, <span class="dv">4</span>), <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb16-3"><a href="#cb16-3" tabindex="-1"></a><span class="co">#&gt; Optimal rival sigma_abs^2 = 0.7192</span></span></code></pre></div>
+<p>Note that with only two support points this design cannot estimate
+all four parameters of the Hill model. The paper proposes combining it
+with a D-optimal design via the augmentation workflow described in
+<code>vignette(&quot;optedr-augment&quot;)</code>.</p>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

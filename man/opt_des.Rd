@@ -19,81 +19,133 @@ opt_des(
   par_int = NULL,
   matB = NULL,
   reg_int = NULL,
-  desired_output = c(1, 2),
+  max_iter = 21L,
   distribution = NA,
-  weight_fun = function(x) 1
+  weight_fun = function(x) 1,
+  compound = NULL,
+  rival_model = NULL,
+  rival_params = NULL,
+  rival_pars = NULL,
+  family = "Normal",
+  phi = 1,
+  rival_lower = NULL,
+  rival_upper = NULL,
+  kl_fun = NULL
 )
 }
 \arguments{
-\item{criterion}{character variable with the chosen optimality criterion. Can be one of the following:
-\itemize{
-\item 'D-Optimality'
-\item 'Ds-Optimality'
-\item 'A-Optimality'
-\item 'I-Optimality'
-\item 'L-Optimality'
-}}
+\item{criterion}{character variable with the chosen optimality criterion.}
 
-\item{model}{formula describing the model to calculate the optimal design. Must use x as the variable.}
+\item{model}{formula describing the model. For single-factor models use \code{x} as the
+design variable; for multi-factor models use \code{x1}, \code{x2}, etc.}
 
-\item{parameters}{character vector with the parameters of the models, as written in the \code{formula}.}
+\item{parameters}{character vector with the parameter names.}
 
-\item{par_values}{numeric vector with the parameters nominal values, in the same order as given in \code{parameters}.}
+\item{par_values}{numeric vector with the nominal parameter values.}
 
-\item{design_space}{numeric vector with the limits of the space of the design.}
+\item{design_space}{For single-factor models: numeric vector \code{c(min, max)}.
+For multi-factor models: named list \code{list(x1 = c(min, max), x2 = c(min, max), ...)}.}
 
-\item{init_design}{optional dataframe with the initial design for the algorithm. A dataframe with two columns:
-\itemize{
-\item \code{Point} contains the support points of the design.
-\item \code{Weight} contains the corresponding weights of the \code{Point}s.
-}}
+\item{init_design}{optional dataframe with the initial design. For single-factor models
+use columns \code{Point} and \code{Weight}; for multi-factor models use one column per
+design variable plus \code{Weight}.}
 
-\item{join_thresh}{optional numeric value that states how close, in real units, two points must be in order to
-be joined together by the join heuristic.}
+\item{join_thresh}{optional numeric threshold for merging nearby design points.}
 
-\item{delete_thresh}{optional numeric value with the minimum weight, over 1 total, that a point needs to have
-in order to not be deleted from the design.}
+\item{delete_thresh}{optional numeric minimum weight to keep a support point.}
 
-\item{delta}{optional numeric value in (0, 1), parameter of the algorithm.}
+\item{delta}{optional numeric in (0, 1), damping parameter of the algorithm.}
 
-\item{tol}{optional numeric value for the convergence of the weight optimizing algorithm.}
+\item{tol}{optional numeric for convergence of the weight loop.}
 
-\item{tol2}{optional numeric value for the stop criterion: difference between maximum of sensitivity function
-and optimality criterion.}
+\item{tol2}{optional numeric for the outer stop condition.}
 
-\item{par_int}{optional numeric vector with the index of the \code{parameters} of interest for Ds-optimality.}
+\item{par_int}{optional numeric vector of parameter indices for Ds-optimality.}
 
-\item{matB}{optional matrix of dimensions k x k, for L-optimality.}
+\item{matB}{optional k x k matrix for L-optimality.}
 
-\item{reg_int}{optional numeric vector of two components with the bounds of the interest region for I-Optimality.}
+\item{reg_int}{optional bounds for the I-optimality integration region.
+Single-factor: \code{c(min, max)}.  Multi-factor: named list matching \code{design_space}.}
 
-\item{desired_output}{not functional yet: decide which kind of output you want.}
+\item{max_iter}{optional integer maximum number of outer cocktail iterations.}
 
-\item{distribution}{character variable specifying the probability distribution of the response. Can be one of the following:
-\itemize{
-\item 'Homoscedasticity'
-\item 'Gamma', which can be used for exponential or normal heteroscedastic with constant relative error
-\item 'Poisson'
-\item 'Logistic'
-\item 'Log-Normal' (work in progress)
-}}
+\item{distribution}{character variable specifying the response distribution.}
 
-\item{weight_fun}{optional one variable function that represents the square of the structure of variance, in case of heteroscedastic variance of the response.}
+\item{weight_fun}{optional variance-structure weight function.}
+
+\item{compound}{optional list of criterion specifications for \code{criterion = "Compound"}.
+Each element must be a named list with at least \code{criterion} (character) and
+\code{weight} (positive numeric). Additional fields per sub-criterion:
+\code{par_int} (Ds-Optimality), \code{reg_int} (I-Optimality), \code{matB} (L-Optimality).
+Weights are normalised to sum to 1. Example:
+\code{list(list(criterion="D-Optimality", weight=0.7),
+             list(criterion="I-Optimality", weight=0.3, reg_int=c(380,422)))}.}
+
+\item{rival_model}{optional formula for the rival model used with
+\code{criterion = "KL-Optimality"}. Defaults to \code{model} (same structure, rival
+parameters explored by inner optimisation).}
+
+\item{rival_params}{optional character vector of rival model parameter names. Defaults to
+\code{parameters}.}
+
+\item{rival_pars}{optional numeric vector of initial rival parameter values for the inner
+optimisation. Defaults to \code{par_values}.}
+
+\item{family}{character; GLM family for \code{criterion = "KL-Optimality"}. One of
+\code{"Normal"}, \code{"Poisson"}, \code{"Binomial"}, \code{"Gamma"}. Default \code{"Normal"}.}
+
+\item{phi}{positive numeric dispersion parameter for KL-Optimality. Default \code{1}.}
+
+\item{rival_lower}{optional numeric vector of lower bounds for rival parameters in the
+inner optimisation. Defaults to \code{-Inf} for each parameter.}
+
+\item{rival_upper}{optional numeric vector of upper bounds for rival parameters in the
+inner optimisation. Defaults to \code{Inf} for each parameter.}
+
+\item{kl_fun}{optional user-supplied \code{function(x, beta2)} giving the point
+KL divergence at design point \code{x} for rival parameters \code{beta2}, as built by
+\code{\link{make_kl_fun}}. When provided, bypasses the \code{family}/\code{rival_model}
+path entirely; \code{rival_pars} must still be supplied for the inner optimisation.}
 }
 \value{
-a list of two objects:
-\itemize{
-\item optdes: a dataframe with the optimal design in two columns, \code{Point} and \code{Weight}.
-\item sens: a plot with the sensitivity function to check for optimality of the design.
-}
+a list of class \code{optdes} with components \code{optdes}, \code{convergence},
+\code{sens}, \code{criterion}, \code{crit_value}, and \code{atwood}.
 }
 \description{
 The opt_des function calculates the optimal design for an optimality criterion and a model input from the user.
-The parameters allows for the user to customize the parameters for the cocktail algorithm in case the default
-set does not provide a satisfactory output. Depending on the criterion, additional details are necessary.
-For 'Ds-Optimality' the par_int parameter is necessary. For 'I-Optimality' either the matB or reg_int must
-be provided.
+Supports single-factor models (design variable named \code{x}) and multi-factor models
+(design variables named \code{x1}, \code{x2}, \ldots, detected automatically from the formula).
 }
 \examples{
+# Single-factor (backward compatible)
 opt_des("D-Optimality", y ~ a * exp(-b / x), c("a", "b"), c(1, 1500), c(212, 422))
+
+\donttest{
+# Two-factor Michaelis-Menten bisubstrate model
+opt_des("D-Optimality",
+        y ~ Vmax * x1 * x2 / ((K1 + x1) * (K2 + x2)),
+        c("Vmax", "K1", "K2"), c(1, 1, 1),
+        list(x1 = c(0.1, 10), x2 = c(0.1, 10)))
+
+# Compound D+I (70\% D, 30\% I) for Antoine equation
+opt_des("Compound",
+        y ~ 10^(a - b/(c + x)), c("a","b","c"),
+        c(8.07131, 1730.63, 233.426), c(1, 100),
+        compound = list(
+          list(criterion = "D-Optimality", weight = 0.7),
+          list(criterion = "I-Optimality", weight = 0.3, reg_int = c(60, 100))
+        ))
+
+# KL-Optimality: discriminate quadratic from linear mean model (Normal)
+opt_des("KL-Optimality",
+        model        = y ~ a * x^2,
+        parameters   = c("a"),
+        par_values   = c(1),
+        design_space = c(1, 5),
+        rival_model  = y ~ b * x,
+        rival_params = c("b"),
+        rival_pars   = c(3),
+        family       = "Normal",
+        phi          = 1)
+}
 }

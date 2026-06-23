@@ -14,16 +14,16 @@ combinatorial_round(
   weight_fun = function(x) 1,
   par_int = NULL,
   reg_int = NULL,
-  matB = NULL
+  matB = NULL,
+  max_support = 15L,
+  ask = TRUE
 )
 }
 \arguments{
-\item{design}{either a dataframe with the design to round, or an object of class "optdes". If the former,
-the criterion, model and parameters must be specified. The dataframe should have two columns:
-\itemize{
-\item \code{Point} contains the support points of the design.
-\item \code{Weight} contains the corresponding weights of the \code{Point}s.
-}}
+\item{design}{either a dataframe with the design to round, or an object of class \code{"optdes"}.
+If a dataframe, the criterion, model and parameters must be specified. It must have a \code{Weight}
+column and one or more design-variable columns (\code{Point} for single-factor,
+\code{x1}, \code{x2}, \ldots for multi-factor).}
 
 \item{n}{integer with the desired number of points of the resulting design.}
 
@@ -36,7 +36,8 @@ the criterion, model and parameters must be specified. The dataframe should have
 \item 'L-Optimality'
 }}
 
-\item{model}{formula describing the model. Must use x as the variable.}
+\item{model}{formula describing the model. Must use \code{x} (single-factor) or
+\code{x1}, \code{x2}, \ldots (multi-factor) as design variables.}
 
 \item{parameters}{character vector with the parameters of the models, as written in the \code{formula}.}
 
@@ -49,14 +50,27 @@ the criterion, model and parameters must be specified. The dataframe should have
 \item{reg_int}{optional numeric vector with the ranges of integration, for I-optimality.}
 
 \item{matB}{optional matrix of dimensions k x k, for L-optimality.}
+
+\item{max_support}{integer. Number of support points above which the function triggers the
+confirmation mechanism. Default is 15 (\eqn{2^{15} \approx 32\,000} combinations).}
+
+\item{ask}{logical. If \code{TRUE} (default) and the design exceeds \code{max_support}:
+in an interactive session the user is prompted; in a non-interactive session an error is raised.
+Set \code{ask = FALSE} to skip confirmation in scripts or pipelines (a message is still emitted).}
 }
 \value{
-A data.frame with the rounded design to n number of points
+A data.frame with the rounded design to n number of points, or \code{NULL} invisibly
+if the user declines the confirmation prompt.
 }
 \description{
 Given an approximate design and a number of points, computes all the possible combinations of
 roundings of each point to the nearest integer, keeps the ones that amount to the requested number of points,
-and returns the one with the best value for the criterion function
+and returns the one with the best value for the criterion function.
+
+The search is exhaustive and requires \eqn{2^k} evaluations where \eqn{k} is the number of
+support points.  For designs with more than \code{max_support} support points the function
+requests confirmation (interactive sessions) or stops with an informative error
+(non-interactive sessions), unless \code{ask = FALSE}.
 }
 \examples{
 aprox_design <- opt_des("D-Optimality", y ~ a * exp(-b / x), c("a", "b"), c(1, 1500), c(212, 422))
