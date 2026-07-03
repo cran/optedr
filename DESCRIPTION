@@ -1,7 +1,7 @@
 Package: optedr
 Title: Calculating Optimal and D-Augmented Designs for Single- and
         Multi-Factor Models
-Version: 3.0.0
+Version: 3.0.1
 Authors@R: 
     c(person(given = "Carlos",
            family = "de la Calle-Arroyo",
@@ -31,7 +31,7 @@ Suggests: testthat (>= 3.0.0), mockery, knitr, rmarkdown, markdown, DT,
 Imports: ggplot2, purrr, rlang, crayon, cli, shiny, utils
 Config/testthat/edition: 3
 NeedsCompilation: no
-Packaged: 2026-06-23 09:01:24 UTC; Carlos
+Packaged: 2026-07-03 09:58:42 UTC; Carlos
 Author: Carlos de la Calle-Arroyo [aut, cre] (ORCID:
     <https://orcid.org/0000-0002-5099-888X>),
   Jesús López-Fidalgo [aut] (ORCID:
@@ -40,4 +40,4 @@ Author: Carlos de la Calle-Arroyo [aut, cre] (ORCID:
     <https://orcid.org/0000-0003-4970-3877>)
 Maintainer: Carlos de la Calle-Arroyo <carlos.calle.arroyo@gmail.com>
 Repository: CRAN
-Date/Publication: 2026-06-23 10:10:02 UTC
+Date/Publication: 2026-07-03 16:00:02 UTC
